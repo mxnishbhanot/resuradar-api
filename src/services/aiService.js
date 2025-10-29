@@ -1,28 +1,48 @@
-// services/aiService.js
-import axios from "axios";
+import { GoogleGenAI } from "@google/genai";
+import dotenv from "dotenv";
+dotenv.config();
 
-export const analyzeResume = async (text) => {
-  const model = "minimax/minimax-m2:free";
-  const endpoint = "https://openrouter.ai/api/v1/chat/completions";
+const isProd = process.env.NODE_ENV === "production";
 
+// Initialize Gemini client
+const ai = isProd
+  ? new GoogleGenAI({
+      vertexai: true,
+      project: process.env.GOOGLE_PROJECT_ID,
+      location: process.env.GOOGLE_REGION || "us-central1",
+      apiVersion: "v1",
+    })
+  : new GoogleGenAI({
+      apiKey: process.env.GEMINI_API_KEY,
+      apiVersion: "v1alpha",
+    });
+
+console.log(
+  isProd
+    ? "✅ Gemini using Vertex AI (v1)"
+    : "🧪 Gemini using AI Studio (v1alpha)"
+);
+
+export async function analyzeResume(resumeText) {
   const prompt = `
 You are a professional tech resume reviewer specializing in software engineering resumes.
 
 Your task is to analyze the following resume text and return TWO types of feedback:
-1. **Free Feedback** — concise, motivational, and general (visible to all users)
+
+1. Free Feedback — concise, motivational, and general (visible to all users)
    - Resume Score (out of 10)
    - 3 Key Strengths
    - 3 High-Level Areas for Improvement
    - Short overall summary (2–3 sentences)
 
-2. **Premium Feedback** — advanced insights (behind paywall)
+2. Premium Feedback — advanced insights (behind paywall)
    - Deep analysis with specific recommendations
    - 2–3 rewritten resume bullet points
    - 3–5 portfolio/LinkedIn improvement tips
    - 5 resume keywords (for ATS)
    - A “Professional Level” (Junior / Mid-Level / Senior)
 
-Return only **valid JSON** with this structure (no markdown, no commentary, no explanations):
+Return valid JSON only, no markdown or extra commentary.
 
 {
   "score": number,
@@ -41,42 +61,47 @@ Return only **valid JSON** with this structure (no markdown, no commentary, no e
 }
 
 Resume text:
-${text}
+${resumeText}
 `;
 
-  const body = {
-    model,
-    messages: [
-      { role: "system", content: "You are a professional resume reviewer." },
-      { role: "user", content: prompt },
-    ],
-  };
-
   try {
-    const response = await axios.post(endpoint, body, {
-      headers: {
-        "Authorization": `Bearer ${process.env.OPENROUTER_API_KEY}`,
-        "Content-Type": "application/json",
-      },
+    // Select model based on environment
+    const model = isProd ? "gemini-2.0-pro-001" : "gemini-2.0-flash-001";
+
+    // Send request to Gemini
+    const response = await ai.models.generateContent({
+      model,
+      contents: prompt,
     });
 
-    const raw = response.data.choices?.[0]?.message?.content?.trim();
-    if (!raw) throw new Error("No content from AI");
+    // Extract generated text safely
+    const text =
+      response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
+      response?.response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
 
-    // 🔒 Clean and extract only JSON from messy responses
-    const jsonMatch = raw.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No valid JSON found in AI response");
+    if (!text) {
+      console.error("Gemini returned no output. Response:", JSON.stringify(response, null, 2));
+      throw new Error("Gemini returned no text");
+    }
 
-    const cleaned = jsonMatch[0]
-      .replace(/```json|```/g, "")
-      .replace(/<think>[\s\S]*?<\/think>/g, "") // remove reasoning tags
-      .trim();
+    // Extract JSON structure from text
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No valid JSON found in Gemini response");
 
-    const parsed = JSON.parse(cleaned);
+    const parsed = JSON.parse(jsonMatch[0]);
+
+    // Validate required keys
+    if (
+      typeof parsed.score !== "number" ||
+      !parsed.free_feedback ||
+      !parsed.premium_feedback
+    ) {
+      throw new Error("Incomplete or malformed JSON from Gemini");
+    }
 
     return parsed;
   } catch (error) {
-    console.error("AI service failed:", error.response?.data || error.message);
-    throw new Error("AI service failed");
+    console.error("analyzeResume error:", error.message);
+    throw new Error("Failed to analyze resume with Gemini");
   }
-};
+}
