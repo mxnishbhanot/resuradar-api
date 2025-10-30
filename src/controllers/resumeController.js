@@ -24,6 +24,7 @@ export const uploadResume = async (req, res) => {
       text,
       analysis,
       score: analysis.score,
+      userId: req.user.userId,
     });
 
     // Delete temp file safely
@@ -32,6 +33,7 @@ export const uploadResume = async (req, res) => {
     } catch (unlinkErr) {
       console.warn("Failed to delete temp file:", unlinkErr.message);
     }
+
 
     // Send response
     return res.status(200).json({

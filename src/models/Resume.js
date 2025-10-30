@@ -6,6 +6,7 @@ const resumeSchema = new mongoose.Schema(
         text: String,
         analysis: { type: Object, required: true },
         score: Number,
+        userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
     },
     { timestamps: true }
 );

@@ -19,7 +19,7 @@ router.post("/auth/google", googleAuth);
 router.get("/user/me", verifyToken, getUser);
 
 // ---------- Resume ----------
-router.post("/resumes/upload", upload.single("resume"), uploadResume);
+router.post("/resumes/upload", verifyToken,  upload.single("resume"), uploadResume);
 router.get("/resumes", verifyToken, getResumes);
 
 // ---------- Payments ----------

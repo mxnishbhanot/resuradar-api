@@ -28,7 +28,8 @@ export const googleAuth = async (req, res) => {
         email,
         name,
         picture,
-        isPremium: false, // default non-premium
+        isPremium: false,
+        joinedAt: new Date(),
       });
     } else {
       // Update user profile info if changed
