@@ -9,7 +9,7 @@ dotenv.config();
 const app = express();
 
 const allowedOrigins = [
-  "https://resuradar.onrender.com",
+  "https://resuradar-frontend.onrender.com",
   "https://resuradar-api.onrender.com",
 ];
 
