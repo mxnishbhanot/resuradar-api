@@ -1,54 +1,71 @@
 import axios from "axios";
 import jwt from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
 import User from "../models/User.js";
 import { config } from "../config/config.js";
 
+const googleClient = new OAuth2Client(config.googleClientId);
+
 export const googleAuth = async (req, res) => {
   try {
-    const { token } = req.body;
-
-    // Validate required field
-    if (!token) {
-      return res.status(400).json({ message: "Google access token is required" });
+    const { token, idToken } = req.body;
+    const authToken = token || idToken; // accept either key
+    if (!authToken) {
+      return res.status(400).json({ message: "Google token is required" });
     }
 
-    // Get user info from Google
-    const googleRes = await axios.get(
-      `${config.googleBaseUrl}/v1/userinfo?alt=json&access_token=${token}`,
-      { timeout: 8000 }
-    );
+    let userInfo;
 
-    const { id: googleId, email, name, picture } = googleRes.data;
+    if (idToken) {
+      // ✅ Handle One Tap ID token
+      const ticket = await googleClient.verifyIdToken({
+        idToken: authToken,
+        audience: config.googleClientId,
+      });
+      const payload = ticket.getPayload();
+      userInfo = {
+        googleId: payload.sub,
+        email: payload.email,
+        name: payload.name,
+        picture: payload.picture,
+      };
+    } else {
+      // ✅ Handle OAuth access token
+      const googleRes = await axios.get(
+        `${config.googleBaseUrl}/v1/userinfo?alt=json&access_token=${authToken}`,
+        { timeout: 8000 }
+      );
+      userInfo = {
+        googleId: googleRes.data.id,
+        email: googleRes.data.email,
+        name: googleRes.data.name,
+        picture: googleRes.data.picture,
+      };
+    }
 
-    // Check if user already exists or create new one
-    let user = await User.findOne({ googleId });
+    // 🔐 Upsert user in DB
+    let user = await User.findOne({ googleId: userInfo.googleId });
     if (!user) {
       user = await User.create({
-        googleId,
-        email,
-        name,
-        picture,
+        ...userInfo,
         isPremium: false,
         joinedAt: new Date(),
       });
     } else {
-      // Update user profile info if changed
-      const updatedFields = {};
-      if (user.name !== name) updatedFields.name = name;
-      if (user.picture !== picture) updatedFields.picture = picture;
-      if (Object.keys(updatedFields).length) {
-        await User.findByIdAndUpdate(user._id, updatedFields);
-      }
+      await User.findByIdAndUpdate(user._id, {
+        name: userInfo.name,
+        picture: userInfo.picture,
+      });
     }
 
-    // Generate app JWT
+    // 🔑 Generate app JWT
     const appToken = jwt.sign(
       { userId: user._id, email: user.email },
       config.jwtSecret,
       { expiresIn: "7d" }
     );
 
-    return res.status(200).json({
+    res.status(200).json({
       success: true,
       token: appToken,
       user: {
