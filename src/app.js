@@ -14,8 +14,8 @@ const allowedOrigins = [
 ];
 
 if (process.env.NODE_ENV !== "production") {
-  allowedOrigins.push("http://localhost:4200");
-  allowedOrigins.push("http://127.0.0.1:4200");
+  allowedOrigins.push("http://localhost:4300");
+  allowedOrigins.push("http://127.0.0.1:4300");
 }
 
 app.use(
