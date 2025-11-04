@@ -7,6 +7,7 @@ const resumeSchema = new mongoose.Schema(
         analysis: { type: Object, required: true },
         score: Number,
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+        type: { type: String, enum: ["standard", "job_match", 'created'], default: "standard" },
     },
     { timestamps: true }
 );

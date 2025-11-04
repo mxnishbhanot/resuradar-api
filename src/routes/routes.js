@@ -1,6 +1,6 @@
 import express from "express";
 import multer from "multer";
-import { uploadResume, getResumes } from "../controllers/resumeController.js";
+import { uploadResume, getResumes, matchResumeToJob } from "../controllers/resumeController.js";
 import { googleAuth } from "../controllers/authController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 import { initiatePayment } from "../controllers/paymentController.js";
@@ -21,6 +21,7 @@ router.get("/user/me", verifyToken, getUser);
 
 // ---------- Resume ----------
 router.post("/resumes/upload", verifyToken,  upload.single("resume"), uploadResume);
+router.post("/resumes/match", verifyToken,  upload.single("resume"), matchResumeToJob);
 router.get("/resumes", verifyToken, getResumes);
 
 // ---------- Payments ----------
