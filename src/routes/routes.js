@@ -6,6 +6,7 @@ import { verifyToken } from "../middlewares/authMiddleware.js";
 import { initiatePayment } from "../controllers/paymentController.js";
 import { verifyPayment } from "../controllers/verifyPaymentController.js";
 import { getUser } from "../controllers/userController.js";
+import { submitContact } from "../controllers/contactController.js";
 
 const router = express.Router();
 
@@ -25,5 +26,9 @@ router.get("/resumes", verifyToken, getResumes);
 // ---------- Payments ----------
 router.post("/initiate-payment", verifyToken, initiatePayment);
 router.get("/verify-payment/:orderId", verifyToken, verifyPayment);
+
+//---------- Public ----------
+router.post("/contact", submitContact);
+
 
 export default router;
