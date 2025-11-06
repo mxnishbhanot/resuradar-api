@@ -312,7 +312,7 @@ ${resumeText}
       premium_feedback: parsed.premium_feedback,
     };
 
-    console.log("✅ analyzeResumeToJob completed successfully:", result);
+    // console.log("✅ analyzeResumeToJob completed successfully:", result);
     return result;
 
   } catch (error) {
