@@ -7,6 +7,7 @@ import { initiatePayment } from "../controllers/paymentController.js";
 import { verifyPayment } from "../controllers/verifyPaymentController.js";
 import { getUser } from "../controllers/userController.js";
 import { submitContact } from "../controllers/contactController.js";
+import { autoSaveCustomResumeDraft, completeCustomResume, deleteCustomResume, duplicateCustomResume, fetchAllCustomResumes, getCustomResumeDraft, saveCustomResume, updateCustomResume, uploadCustomResume } from "../controllers/customResumeController.js";
 
 const router = express.Router();
 
@@ -20,9 +21,20 @@ router.post("/auth/google", googleAuth);
 router.get("/user/me", verifyToken, getUser);
 
 // ---------- Resume ----------
-router.post("/resumes/upload", verifyToken,  upload.single("resume"), uploadResume);
-router.post("/resumes/match", verifyToken,  upload.single("resume"), matchResumeToJob);
+router.post("/resumes/upload", verifyToken, upload.single("resume"), uploadResume);
+router.post("/resumes/match", verifyToken, upload.single("resume"), matchResumeToJob);
 router.get("/resumes", verifyToken, getResumes);
+
+// ---------- Custom Resume ----------
+router.get("/custom-resume/draft", verifyToken, getCustomResumeDraft);
+router.put("/custom-resume/draft/autosave", verifyToken, autoSaveCustomResumeDraft);
+router.post("/custom-resume/save", verifyToken, saveCustomResume);
+router.get("/custom-resume/all", verifyToken, fetchAllCustomResumes);
+router.put("/custom-resume/:id", verifyToken, updateCustomResume);
+router.delete("/custom-resume/:id", verifyToken, deleteCustomResume);
+router.post("/custom-resume/:id/duplicate", verifyToken, duplicateCustomResume);
+router.post("/custom-resume/:id/complete", verifyToken, completeCustomResume);
+router.post("/custom-resume/upload", verifyToken, upload.single("resume"),  uploadCustomResume);
 
 // ---------- Payments ----------
 router.post("/initiate-payment", verifyToken, initiatePayment);

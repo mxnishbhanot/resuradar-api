@@ -313,4 +313,105 @@ ${resumeText}
   }
 }
 
+export async function parseResumeToSchema(resumeText) {
+  const prompt = `
+You are an expert resume parser. Extract structured data from the following resume text.
+
+Return ONLY valid JSON matching this exact schema:
+
+{
+  "personal": {
+    "firstName": string,
+    "lastName": string,
+    "email": string,
+    "phone": string,
+    "location": string,
+    "headline": string,
+    "summary": string
+  },
+  "educations": [
+    {
+      "school": string,
+      "degree": string,
+      "field": string,
+      "startYear": string,
+      "endYear": string,
+      "description": string
+    }
+  ],
+  "experiences": [
+    {
+      "title": string,
+      "company": string,
+      "startDate": string,
+      "endDate": string,
+      "isCurrent": boolean,
+      "bullets": [string]
+    }
+  ],
+  "skills": [
+    {
+      "name": string,
+      "level": string  // can be empty string if unknown
+    }
+  ],
+  "projects": [
+    {
+      "title": string,
+      "link": string,
+      "description": string,
+      "tech": [string]
+    }
+  ]
+}
+
+Rules:
+- Infer first/last name from full name if needed.
+- For dates, use format like "2020", "Mar 2020", or "2020 – 2023". Keep as strings.
+- If end date is "Present", set "isCurrent": true and "endDate": "" or "Present".
+- Omit empty/null values — use empty strings instead of null.
+- If a section is missing, return empty array or empty object fields.
+- Do NOT include any markdown, explanation, or extra keys.
+
+Resume text:
+${resumeText}
+`;
+
+  try {
+    const model = isProd ? "gemini-2.0-pro-001" : "gemini-2.0-flash-001";
+
+    const response = await ai.models.generateContent({
+      model,
+      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    });
+
+    const text = response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+
+    if (!text) {
+      throw new Error("AI returned empty response");
+    }
+
+    // Clean and extract JSON
+    let cleaned = text
+      .replace(/```(?:json)?\s*/g, '')
+      .replace(/```\s*/g, '')
+      .trim();
+
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) throw new Error("No JSON object found in response");
+
+    const parsed = JSON.parse(jsonMatch[0]);
+
+    // Basic validation
+    if (!parsed.personal || !parsed.educations || !parsed.experiences) {
+      throw new Error("Incomplete schema in AI response");
+    }
+
+    return parsed;
+  } catch (error) {
+    console.error('parseResumeToSchema error:', error.message);
+    throw new Error('Failed to parse resume structure with AI');
+  }
+}
+
 
