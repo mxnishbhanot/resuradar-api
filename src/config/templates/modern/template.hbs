@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <style id="resume-styles">
+    {{{style}}}
+  </style>
+</head>
+
+<body>
+
+<div class="resume">
+
+  <!-- ============ HEADER ============ -->
+  <header class="header no-break">
+    <h1 class="name">{{personal.firstName}} {{personal.lastName}}</h1>
+
+    {{#if personal.headline}}
+    <p class="headline">{{personal.headline}}</p>
+    {{/if}}
+
+    <div class="contact">
+
+      {{#if personal.email}}
+      <span>
+        <!-- email icon -->
+        <svg class="icon-sm" viewBox="0 0 24 24"><path d="M2 4h20v16H2V4zm10 7L3.5 6h17L12 11z"/></svg>
+        {{personal.email}}
+      </span>
+      {{/if}}
+
+      {{#if personal.phone}}
+      <span>
+        <!-- phone icon -->
+        <svg class="icon-sm" viewBox="0 0 24 24"><path d="M6.6 10.8c1.2 2.4 3.1 4.3 5.5 5.5l1.8-1.8c.3-.3.7-.4 1.1-.3 1.2.4 2.5.7 3.8.7.6 0 1 .4 1 .9v3c0 .6-.4 1-1 1C9.4 21.8 2.2 14.6 2.2 6c0-.6.4-1 1-1h3c.6 0 .9.4.9 1 0 1.3.2 2.6.7 3.8.1.4 0 .8-.3 1.1l-1.9 1.9z"/></svg>
+        {{personal.phone}}
+      </span>
+      {{/if}}
+
+      {{#if personal.location}}
+      <span>
+        <!-- location icon -->
+        <svg class="icon-sm" viewBox="0 0 24 24"><path d="M12 2C8.1 2 5 5.1 5 9c0 5.2 7 13 7 13s7-7.8 7-13c0-3.9-3.1-7-7-7zm0 9.5c-1.4 0-2.5-1.1-2.5-2.5S10.6 6.5 12 6.5s2.5 1.1 2.5 2.5S13.4 11.5 12 11.5z"/></svg>
+        {{personal.location}}
+      </span>
+      {{/if}}
+
+    </div>
+  </header>
+
+
+  <!-- ============ SUMMARY ============ -->
+  {{#if personal.summary}}
+  <section class="section">
+    <h2 class="section-title">Executive Summary</h2>
+    <p class="text">{{personal.summary}}</p>
+  </section>
+  {{/if}}
+
+
+  <!-- ============ CORE SKILLS ============ -->
+  {{#if skills.length}}
+  <section class="section">
+    <h2 class="section-title">Core Competencies</h2>
+
+    <div class="skill-chips">
+      {{#each skills}}
+      <span class="chip">
+        <!-- check icon -->
+        <svg class="icon-xs" viewBox="0 0 24 24"><path d="M20 6L9 17l-5-5"/></svg>
+        {{name}}{{#if level}} ({{level}}){{/if}}
+      </span>
+      {{/each}}
+    </div>
+  </section>
+  {{/if}}
+
+
+  <!-- ============ EXPERIENCE ============ -->
+  {{#if experiences.length}}
+  <section class="section">
+    <h2 class="section-title">Leadership Experience</h2>
+
+    {{#each experiences}}
+    <div class="exp-item no-break">
+
+      <div class="exp-header">
+        <div>
+          <h3 class="exp-role">{{title}}</h3>
+          {{#if company}}<p class="exp-company">{{company}}</p>{{/if}}
+        </div>
+
+        <span class="exp-date">{{startDate}} – {{#if isCurrent}}Present{{else}}{{endDate}}{{/if}}</span>
+      </div>
+
+      {{#if bullets.length}}
+      <ul class="bullets">
+        {{#each bullets}}
+        <li>{{this}}</li>
+        {{/each}}
+      </ul>
+      {{/if}}
+
+    </div>
+    {{/each}}
+    
+  </section>
+  {{/if}}
+
+
+  <!-- ============ EDUCATION ============ -->
+  {{#if educations.length}}
+  <section class="section">
+    <h2 class="section-title">Education</h2>
+
+    {{#each educations}}
+    <div class="edu-item no-break">
+
+      <div class="edu-header">
+        <div>
+          <h3 class="edu-degree">{{degree}} {{#if field}}in {{field}}{{/if}}</h3>
+          <p class="edu-school">{{school}}</p>
+        </div>
+
+        <span class="edu-date">
+          {{#if startYear}}{{startYear}} – {{/if}}
+          {{#if endYear}}{{endYear}}{{else}}Present{{/if}}
+        </span>
+      </div>
+
+      {{#if description}}
+      <p class="text">{{description}}</p>
+      {{/if}}
+
+    </div>
+    {{/each}}
+
+  </section>
+  {{/if}}
+
+
+  <!-- ============ PROJECTS ============ -->
+  {{#if projects.length}}
+  <section class="section">
+    <h2 class="section-title">Key Projects</h2>
+
+    {{#each projects}}
+    <div class="proj-item no-break">
+      <h3 class="proj-title">{{title}}</h3>
+
+      {{#if link}}
+      <p class="proj-link">{{link}}</p>
+      {{/if}}
+
+      {{#if description}}
+      <p class="text">{{description}}</p>
+      {{/if}}
+
+      {{#if tech.length}}
+      <p class="text small">
+        <strong>Tech:</strong>
+        {{#each tech}}
+        {{this}}{{#unless @last}}, {{/unless}}
+        {{/each}}
+      </p>
+      {{/if}}
+    </div>
+    {{/each}}
+
+  </section>
+  {{/if}}
+
+</div>
+
+</body>
+</html>

@@ -2,6 +2,7 @@ import CustomResume from "../models/CustomResume.js";
 import { parseResumeToSchema } from "../services/aiService.js";
 import { PDFParse } from "pdf-parse";
 import mammoth from 'mammoth';
+import { renderTemplateHTML } from "../services/template-engine.js";
 
 // Get user's draft resume or create new one
 export const getCustomResumeDraft = async (req, res) => {
@@ -312,3 +313,36 @@ export const uploadCustomResume = async (req, res) => {
         res.status(500).json({ error: 'AI failed to parse resume. Try a clearer PDF.' });
     }
 };
+
+export const previewResumeController = async (req, res) => {
+  try {
+    const { template, resumeId } = req.params;
+
+    if (!template || !resumeId) {
+      return res.status(400).json({ message: "Template and Resume ID are required" });
+    }
+
+    const resume = await CustomResume.findOne({
+      _id: resumeId,
+      userId: req.user.userId
+    });
+
+    if (!resume) {
+      return res.status(404).json({ message: "Resume not found" });
+    }
+
+    // Convert to clean plain object
+    const cleanData = JSON.parse(JSON.stringify(resume));
+
+    // Generate HTML (same as PDF)
+    const html = await renderTemplateHTML(cleanData, template);
+
+    res.set("Content-Type", "text/html");
+    return res.send(html);
+
+  } catch (err) {
+    console.error("Preview Error:", err);
+    return res.status(500).json({ message: "Failed to generate preview" });
+  }
+};
+

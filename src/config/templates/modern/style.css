@@ -1,0 +1,192 @@
+/* =====================================
+   Modern Executive Resume (With Colors)
+   Clean • Minimal • Professional
+===================================== */
+
+body {
+  font-family: "Inter", Arial, sans-serif;
+  font-size: 12px;
+  color: #222;
+  margin: 28px;
+  line-height: 1.45;
+}
+
+.resume { width: 100%; }
+
+.no-break { page-break-inside: avoid; }
+
+
+/* -------- Icons -------- */
+.icon-sm {
+  width: 13px;
+  height: 13px;
+  fill: #2F80ED;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+.icon-xs {
+  width: 10px;
+  height: 10px;
+  fill: #2F80ED;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+
+
+/* -------- Header -------- */
+
+.header {
+  padding-bottom: 12px;
+  border-bottom: 2px solid #2F80ED;
+  margin-bottom: 18px;
+}
+
+.name {
+  font-size: 27px;
+  font-weight: 700;
+  margin: 0;
+}
+
+.headline {
+  font-size: 14px;
+  color: #444;
+  margin-top: 3px;
+}
+
+.contact {
+  margin-top: 4px;
+  font-size: 12px;
+}
+
+.contact span {
+  margin-right: 12px;
+  color: #555;
+}
+
+
+/* -------- Sections -------- */
+
+.section {
+  margin-top: 20px;
+}
+
+.section-title {
+  font-size: 14px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: #2F80ED;
+  margin-bottom: 10px;
+  letter-spacing: 0.6px;
+}
+
+
+/* -------- Text -------- */
+
+.text { margin: 0; }
+
+.small { font-size: 11px; color: #555; }
+
+
+/* -------- Skill Chips -------- */
+
+.skill-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.chip {
+  background: #F0F4FF;
+  border: 1px solid #D6E2FF;
+  color: #2F80ED;
+  padding: 3px 8px;
+  font-size: 11px;
+  border-radius: 6px;
+}
+
+
+/* -------- Experience -------- */
+
+.exp-item {
+  margin-bottom: 14px;
+}
+
+.exp-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.exp-role {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.exp-company {
+  margin: 0;
+  font-size: 12px;
+  color: #555;
+}
+
+.exp-date {
+  font-size: 11px;
+  color: #2F80ED;
+  white-space: nowrap;
+}
+
+.bullets {
+  margin: 5px 0 0 18px;
+  padding: 0;
+}
+
+.bullets li {
+  margin-bottom: 3px;
+  line-height: 1.4;
+}
+
+
+/* -------- Education -------- */
+
+.edu-item { margin-bottom: 14px; }
+
+.edu-header {
+  display: flex;
+  justify-content: space-between;
+}
+
+.edu-degree {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.edu-school {
+  margin: 0;
+  font-size: 12px;
+  color: #555;
+}
+
+.edu-date {
+  font-size: 11px;
+  color: #2F80ED;
+  white-space: nowrap;
+}
+
+
+/* -------- Projects -------- */
+
+.proj-item { margin-bottom: 14px; }
+
+.proj-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.proj-link {
+  font-size: 12px;
+  color: #2F80ED;
+  text-decoration: underline;
+  word-break: break-all;
+}

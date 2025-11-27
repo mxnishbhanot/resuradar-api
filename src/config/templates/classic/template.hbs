@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+
+  <style id="resume-styles">
+    {{{style}}}
+  </style>
+</head>
+
+<body>
+
+<div class="resume">
+
+  <!-- HEADER -->
+  <header class="header no-break">
+    <h1 class="name">{{personal.firstName}} {{personal.lastName}}</h1>
+
+    {{#if personal.headline}}
+    <p class="headline">{{personal.headline}}</p>
+    {{/if}}
+
+    <div class="contact">
+      {{#if personal.email}}<span>{{personal.email}}</span>{{/if}}
+      {{#if personal.phone}}<span>{{personal.phone}}</span>{{/if}}
+      {{#if personal.location}}<span>{{personal.location}}</span>{{/if}}
+    </div>
+  </header>
+
+
+  <!-- EXECUTIVE SUMMARY -->
+  {{#if personal.summary}}
+  <section class="section">
+    <h2 class="section-title">Executive Summary</h2>
+    <p class="text">{{personal.summary}}</p>
+  </section>
+  {{/if}}
+
+
+  <!-- KEY SKILLS -->
+  {{#if skills.length}}
+  <section class="section">
+    <h2 class="section-title">Core Competencies</h2>
+
+    <ul class="skill-list">
+      {{#each skills}}
+      <li>{{name}}{{#if level}} ({{level}}){{/if}}</li>
+      {{/each}}
+    </ul>
+  </section>
+  {{/if}}
+
+
+  <!-- EXPERIENCE -->
+  {{#if experiences.length}}
+  <section class="section">
+    <h2 class="section-title">Leadership Experience</h2>
+
+    {{#each experiences}}
+    <div class="exp-item no-break">
+
+      <div class="exp-header">
+        <div>
+          <h3 class="exp-title">{{title}}</h3>
+          {{#if company}}<p class="exp-company">{{company}}</p>{{/if}}
+        </div>
+
+        <div class="exp-date">
+          {{startDate}} –
+          {{#if isCurrent}}Present{{else}}{{endDate}}{{/if}}
+        </div>
+      </div>
+
+      {{#if bullets.length}}
+      <ul class="bullets">
+        {{#each bullets}}
+        <li>{{this}}</li>
+        {{/each}}
+      </ul>
+      {{/if}}
+    </div>
+    {{/each}}
+
+  </section>
+  {{/if}}
+
+
+  <!-- EDUCATION -->
+  {{#if educations.length}}
+  <section class="section">
+    <h2 class="section-title">Education</h2>
+
+    {{#each educations}}
+    <div class="edu-item no-break">
+
+      <div class="edu-header">
+        <div>
+          <h3 class="edu-degree">
+            {{degree}}{{#if field}} in {{field}}{{/if}}
+          </h3>
+          <p class="edu-school">{{school}}</p>
+        </div>
+
+        <div class="edu-date">
+          {{#if startYear}}{{startYear}} – {{/if}}
+          {{#if endYear}}{{endYear}}{{else}}Present{{/if}}
+        </div>
+      </div>
+
+      {{#if description}}
+      <p class="text">{{description}}</p>
+      {{/if}}
+
+    </div>
+    {{/each}}
+  </section>
+  {{/if}}
+
+
+  <!-- PROJECTS -->
+  {{#if projects.length}}
+  <section class="section">
+    <h2 class="section-title">Selected Projects</h2>
+
+    {{#each projects}}
+    <div class="proj-item no-break">
+
+      <h3 class="proj-title">{{title}}</h3>
+
+      {{#if link}}
+      <p class="proj-link">{{link}}</p>
+      {{/if}}
+
+      {{#if description}}
+      <p class="text">{{description}}</p>
+      {{/if}}
+
+      {{#if tech.length}}
+      <p class="text small"><strong>Technologies:</strong>
+        {{#each tech}}
+          {{this}}{{#unless @last}}, {{/unless}}
+        {{/each}}
+      </p>
+      {{/if}}
+
+    </div>
+    {{/each}}
+
+  </section>
+  {{/if}}
+
+</div>
+
+</body>
+</html>

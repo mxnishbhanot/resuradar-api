@@ -25,6 +25,12 @@ function decrypt(encryptedData) {
 }
 
 export const encryptionMiddleware = (req, res, next) => {
+  // 👉 Skip encryption entirely for PDF export routes
+  
+  if (req.path.startsWith("/api/export/pdf")) {
+    return next();
+  }
+
   const isMultipart = req.is("multipart/form-data");
 
   // ✅ Decrypt incoming JSON (skip for multipart/form-data)
@@ -38,6 +44,7 @@ export const encryptionMiddleware = (req, res, next) => {
     }
   }
 
+  // 👉 Wrap original JSON to encrypt responses (default behavior)
   const originalJson = res.json.bind(res);
   res.json = (data) => {
     try {
@@ -52,3 +59,4 @@ export const encryptionMiddleware = (req, res, next) => {
 
   next();
 };
+

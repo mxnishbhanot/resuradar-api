@@ -83,7 +83,8 @@ export const uploadResume = async (req, res) => {
 export const getResumes = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const resumes = await Resume.find({ userId }).sort({ createdAt: -1 });
+    const type = req.params.type === 'jd' ? 'job_match' : 'standard';
+    const resumes = await Resume.find({ userId , type }).sort({ createdAt: -1 });
     resumes.map(resume => {
       resume.score = resume.score || (resume.analysis && resume.analysis.free_feedback && resume.analysis.free_feedback.match_score) || 0;
       return resume;

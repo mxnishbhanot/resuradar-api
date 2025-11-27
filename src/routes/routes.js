@@ -7,7 +7,8 @@ import { initiatePayment } from "../controllers/paymentController.js";
 import { verifyPayment } from "../controllers/verifyPaymentController.js";
 import { getUser } from "../controllers/userController.js";
 import { submitContact } from "../controllers/contactController.js";
-import { autoSaveCustomResumeDraft, completeCustomResume, deleteCustomResume, duplicateCustomResume, fetchAllCustomResumes, getCustomResumeDraft, saveCustomResume, updateCustomResume, uploadCustomResume } from "../controllers/customResumeController.js";
+import { autoSaveCustomResumeDraft, completeCustomResume, deleteCustomResume, duplicateCustomResume, fetchAllCustomResumes, getCustomResume, getCustomResumeDraft, previewResumeController, saveCustomResume, updateCustomResume, uploadCustomResume } from "../controllers/customResumeController.js";
+import { exportResumeController } from "../controllers/export.controller.js";
 
 const router = express.Router();
 
@@ -23,13 +24,16 @@ router.get("/user/me", verifyToken, getUser);
 // ---------- Resume ----------
 router.post("/resumes/upload", verifyToken, upload.single("resume"), uploadResume);
 router.post("/resumes/match", verifyToken, upload.single("resume"), matchResumeToJob);
-router.get("/resumes", verifyToken, getResumes);
+router.get("/resumes/:type", verifyToken, getResumes);
 
 // ---------- Custom Resume ----------
+router.get('/custom-resume/pdf', verifyToken,  exportResumeController)
 router.get("/custom-resume/draft", verifyToken, getCustomResumeDraft);
 router.put("/custom-resume/draft/autosave", verifyToken, autoSaveCustomResumeDraft);
 router.post("/custom-resume/save", verifyToken, saveCustomResume);
 router.get("/custom-resume/all", verifyToken, fetchAllCustomResumes);
+router.get("/custom-resume/:template/:resumeId", verifyToken, previewResumeController);
+router.get("/custom-resume/:id", verifyToken, getCustomResume);
 router.put("/custom-resume/:id", verifyToken, updateCustomResume);
 router.delete("/custom-resume/:id", verifyToken, deleteCustomResume);
 router.post("/custom-resume/:id/duplicate", verifyToken, duplicateCustomResume);
