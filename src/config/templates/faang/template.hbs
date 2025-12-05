@@ -6,8 +6,8 @@
     <title>{{personal.firstName}} {{personal.lastName}} - Resume</title>
     <style>
         /* ============================================
-           MODERN GEOMETRIC RESUME TEMPLATE
-           Bold Typography | Geometric Elements | Strong Hierarchy
+           APPLE-LIKE CLEAN RESUME TEMPLATE
+           ATS-Optimized | Professional | Minimal
            ============================================ */
 
         * {
@@ -17,10 +17,10 @@
         }
 
         body {
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             font-size: 10.5pt;
-            line-height: 1.6;
-            color: #1a1a1a;
+            line-height: 1.5;
+            color: #1d1d1f;
             background: #ffffff;
             max-width: 8.5in;
             margin: 0 auto;
@@ -28,145 +28,90 @@
         }
 
         /* ============================================
-           HEADER - BOLD & GEOMETRIC
+           TYPOGRAPHY HIERARCHY
            ============================================ */
 
         .resume-header {
-            position: relative;
-            margin-bottom: 36px;
-            padding-bottom: 28px;
-        }
-
-        .resume-header::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 80px;
-            height: 4px;
-            background: linear-gradient(90deg, #000000 0%, #4a4a4a 100%);
+            text-align: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #d2d2d7;
         }
 
         .name {
-            font-size: 38pt;
-            font-weight: 800;
-            letter-spacing: -1.5px;
-            color: #000000;
-            margin-bottom: 8px;
-            line-height: 1.1;
+            font-size: 32pt;
+            font-weight: 600;
+            letter-spacing: -0.5px;
+            color: #1d1d1f;
+            margin-bottom: 6px;
         }
 
         .headline {
-            font-size: 13pt;
-            font-weight: 500;
-            color: #4a4a4a;
-            margin-bottom: 16px;
-            letter-spacing: 0.3px;
+            font-size: 12pt;
+            font-weight: 400;
+            color: #6e6e73;
+            margin-bottom: 12px;
         }
 
         .contact-info {
             display: flex;
+            justify-content: center;
             flex-wrap: wrap;
-            gap: 20px;
+            gap: 16px;
             font-size: 9.5pt;
-            color: #4a4a4a;
-            font-weight: 500;
-        }
-
-        .contact-item {
-            position: relative;
-            padding-left: 20px;
-        }
-
-        .contact-item::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 12px;
-            height: 12px;
-            background: #000000;
-            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            color: #6e6e73;
         }
 
         .contact-info a {
-            color: #000000;
+            color: #0071e3;
             text-decoration: none;
-            font-weight: 600;
-            border-bottom: 2px solid transparent;
-            transition: border-color 0.2s;
         }
 
         .contact-info a:hover {
-            border-bottom-color: #000000;
+            text-decoration: underline;
+        }
+
+        .contact-separator {
+            color: #d2d2d7;
         }
 
         /* ============================================
-           SUMMARY - BOLD BOX
+           SUMMARY SECTION
            ============================================ */
 
         .summary {
-            background: #f8f8f8;
-            padding: 20px 24px;
-            margin-bottom: 32px;
-            border-left: 5px solid #000000;
-            line-height: 1.7;
-            color: #1a1a1a;
-            font-size: 10.5pt;
+            margin-bottom: 28px;
+            line-height: 1.6;
+            color: #1d1d1f;
+            text-align: left;
         }
 
         /* ============================================
-           SECTIONS - GEOMETRIC HEADERS
+           SECTION STYLING
            ============================================ */
 
         .section {
-            margin-bottom: 32px;
+            margin-bottom: 28px;
         }
 
         .section-title {
-            font-size: 16pt;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: #000000;
-            margin-bottom: 20px;
+            font-size: 14pt;
+            font-weight: 600;
+            letter-spacing: -0.3px;
+            color: #1d1d1f;
+            margin-bottom: 16px;
             text-transform: uppercase;
-            font-size: 12pt;
-            letter-spacing: 1.5px;
-            position: relative;
-            padding-bottom: 12px;
-        }
-
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 50px;
-            height: 3px;
-            background: #000000;
+            font-size: 11pt;
+            letter-spacing: 0.5px;
         }
 
         /* ============================================
-           ENTRY BLOCKS - STRONG HIERARCHY
+           EXPERIENCE & EDUCATION BLOCKS
            ============================================ */
 
         .entry {
-            margin-bottom: 24px;
+            margin-bottom: 20px;
             page-break-inside: avoid;
-            position: relative;
-            padding-left: 16px;
-        }
-
-        .entry::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 6px;
-            width: 8px;
-            height: 8px;
-            background: #000000;
-            transform: rotate(45deg);
         }
 
         .entry:last-child {
@@ -177,152 +122,126 @@
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 6px;
-            gap: 12px;
+            margin-bottom: 4px;
         }
 
         .entry-title {
-            font-size: 12pt;
-            font-weight: 700;
-            color: #000000;
-            letter-spacing: -0.2px;
+            font-size: 11pt;
+            font-weight: 600;
+            color: #1d1d1f;
         }
 
         .entry-date {
-            font-size: 9pt;
-            color: #4a4a4a;
+            font-size: 9.5pt;
+            color: #6e6e73;
             white-space: nowrap;
-            font-weight: 600;
-            background: #f0f0f0;
-            padding: 3px 10px;
-            border-radius: 2px;
         }
 
         .entry-subtitle {
             font-size: 10pt;
-            color: #4a4a4a;
-            margin-bottom: 10px;
-            font-weight: 500;
+            color: #6e6e73;
+            margin-bottom: 8px;
         }
 
         .entry-location {
             font-size: 9.5pt;
-            color: #6a6a6a;
+            color: #86868b;
+            font-style: italic;
         }
 
         /* ============================================
-           BULLETS - MODERN STYLE
+           BULLET POINTS
            ============================================ */
 
         .bullets {
             list-style: none;
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
         .bullets li {
             position: relative;
-            padding-left: 22px;
-            margin-bottom: 8px;
-            line-height: 1.6;
+            padding-left: 18px;
+            margin-bottom: 6px;
+            line-height: 1.5;
         }
 
         .bullets li:before {
-            content: '';
+            content: "•";
             position: absolute;
             left: 0;
-            top: 9px;
-            width: 6px;
-            height: 6px;
-            background: #000000;
-            transform: rotate(45deg);
+            color: #6e6e73;
+            font-weight: 600;
         }
 
         /* ============================================
-           SKILLS - GRID LAYOUT
+           SKILLS SECTION
            ============================================ */
 
         .skills-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
         }
 
         .skill-category {
-            background: #f8f8f8;
-            padding: 16px 18px;
-            border-left: 4px solid #000000;
+            margin-bottom: 12px;
         }
 
         .skill-category-name {
-            font-size: 10.5pt;
-            font-weight: 700;
-            color: #000000;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 9pt;
+            font-size: 10pt;
+            font-weight: 600;
+            color: #1d1d1f;
+            margin-bottom: 6px;
         }
 
         .skill-list {
             font-size: 9.5pt;
-            color: #4a4a4a;
-            line-height: 1.7;
-            font-weight: 500;
+            color: #6e6e73;
+            line-height: 1.6;
         }
 
         /* ============================================
-           PROJECTS
+           PROJECTS SECTION
            ============================================ */
 
         .project-header {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 6px;
-            gap: 12px;
+            margin-bottom: 4px;
         }
 
         .project-title {
-            font-size: 12pt;
-            font-weight: 700;
-            color: #000000;
+            font-size: 11pt;
+            font-weight: 600;
+            color: #1d1d1f;
         }
 
         .project-link {
-            font-size: 9pt;
-            color: #000000;
+            font-size: 9.5pt;
+            color: #0071e3;
             text-decoration: none;
-            font-weight: 700;
-            border-bottom: 2px solid #000000;
         }
 
         .project-link:hover {
-            background: #000000;
-            color: #ffffff;
-            padding: 2px 6px;
-            margin: -2px -6px;
+            text-decoration: underline;
         }
 
         .project-meta {
             font-size: 9.5pt;
-            color: #4a4a4a;
-            margin-bottom: 8px;
-            font-weight: 500;
+            color: #6e6e73;
+            margin-bottom: 6px;
         }
 
         .tech-stack {
-            font-size: 9pt;
-            color: #6a6a6a;
-            margin-top: 8px;
-            font-weight: 600;
-            background: #f0f0f0;
-            padding: 6px 12px;
-            display: inline-block;
-            border-radius: 2px;
+            font-size: 9.5pt;
+            color: #86868b;
+            margin-top: 6px;
+            font-style: italic;
         }
 
         /* ============================================
-           EDUCATION
+           EDUCATION GPA
            ============================================ */
 
         .education-details {
@@ -332,13 +251,9 @@
         }
 
         .gpa {
-            font-size: 9pt;
-            color: #4a4a4a;
+            font-size: 9.5pt;
+            color: #6e6e73;
             white-space: nowrap;
-            font-weight: 600;
-            background: #f0f0f0;
-            padding: 3px 10px;
-            border-radius: 2px;
         }
 
         /* ============================================
@@ -358,11 +273,31 @@
                 page-break-inside: avoid;
             }
         }
+
+        /* ============================================
+           UTILITY CLASSES
+           ============================================ */
+
+        .text-muted {
+            color: #6e6e73;
+        }
+
+        .text-light {
+            color: #86868b;
+        }
+
+        .mb-small {
+            margin-bottom: 12px;
+        }
+
+        .mb-medium {
+            margin-bottom: 20px;
+        }
     </style>
 </head>
 <body>
     <!-- ============================================
-         HEADER
+         HEADER SECTION
          ============================================ -->
     <header class="resume-header">
         <h1 class="name">{{personal.firstName}} {{personal.lastName}}</h1>
@@ -371,34 +306,38 @@
         {{/if}}
         <div class="contact-info">
             {{#if personal.email}}
-            <div class="contact-item"><a href="mailto:{{personal.email}}">{{personal.email}}</a></div>
+            <span><a href="mailto:{{personal.email}}">{{personal.email}}</a></span>
             {{/if}}
             {{#if personal.phone}}
-            <div class="contact-item">{{personal.phone}}</div>
+            <span class="contact-separator">•</span>
+            <span>{{personal.phone}}</span>
             {{/if}}
             {{#if personal.location}}
-            <div class="contact-item">{{personal.location}}</div>
+            <span class="contact-separator">•</span>
+            <span>{{personal.location}}</span>
             {{/if}}
             {{#if personal.linkedin}}
-            <div class="contact-item"><a href="{{personal.linkedin}}" target="_blank">LinkedIn</a></div>
+            <span class="contact-separator">•</span>
+            <span><a href="{{personal.linkedin}}" target="_blank">LinkedIn</a></span>
             {{/if}}
             {{#if personal.github}}
-            <div class="contact-item"><a href="{{personal.github}}" target="_blank">GitHub</a></div>
+            <span class="contact-separator">•</span>
+            <span><a href="{{personal.github}}" target="_blank">GitHub</a></span>
             {{/if}}
         </div>
     </header>
 
     <!-- ============================================
-         SUMMARY
+         SUMMARY SECTION
          ============================================ -->
     {{#if personal.summary}}
-    <div class="summary">
+    <section class="summary">
         {{personal.summary}}
-    </div>
+    </section>
     {{/if}}
 
     <!-- ============================================
-         EXPERIENCE
+         EXPERIENCE SECTION
          ============================================ -->
     {{#if experiences}}
     <section class="section">
@@ -428,7 +367,7 @@
     {{/if}}
 
     <!-- ============================================
-         EDUCATION
+         EDUCATION SECTION
          ============================================ -->
     {{#if educations}}
     <section class="section">
@@ -462,7 +401,7 @@
     {{/if}}
 
     <!-- ============================================
-         PROJECTS
+         PROJECTS SECTION
          ============================================ -->
     {{#if projects}}
     <section class="section">
@@ -472,7 +411,7 @@
             <div class="project-header">
                 <h3 class="project-title">{{this.title}}</h3>
                 {{#if this.link}}
-                <a href="{{this.link}}" class="project-link" target="_blank">VIEW →</a>
+                <a href="{{this.link}}" class="project-link" target="_blank">View Project →</a>
                 {{/if}}
             </div>
             <div class="project-meta">
@@ -490,7 +429,7 @@
             {{/if}}
             {{#if this.techStack}}
             <div class="tech-stack">
-                {{#each this.techStack}}{{this}}{{#unless @last}} • {{/unless}}{{/each}}
+                Technologies: {{#each this.techStack}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
             </div>
             {{/if}}
         </div>
@@ -499,7 +438,7 @@
     {{/if}}
 
     <!-- ============================================
-         SKILLS
+         SKILLS SECTION
          ============================================ -->
     {{#if skills}}
     <section class="section">

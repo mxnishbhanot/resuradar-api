@@ -6,8 +6,8 @@
     <title>{{personal.firstName}} {{personal.lastName}} - Resume</title>
     <style>
         /* ============================================
-           MODERN GEOMETRIC RESUME TEMPLATE
-           Bold Typography | Geometric Elements | Strong Hierarchy
+           MAGAZINE-STYLE RESUME TEMPLATE
+           Editorial Layout | Bold Headers | Asymmetric Design
            ============================================ */
 
         * {
@@ -17,107 +17,106 @@
         }
 
         body {
-            font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            font-size: 10.5pt;
+            font-family: "Avenir Next", "Helvetica Neue", Arial, sans-serif;
+            font-size: 10pt;
             line-height: 1.6;
-            color: #1a1a1a;
+            color: #1e1e1e;
             background: #ffffff;
             max-width: 8.5in;
             margin: 0 auto;
-            padding: 0.5in 0.6in;
+            padding: 0.45in 0.6in;
         }
 
         /* ============================================
-           HEADER - BOLD & GEOMETRIC
+           HEADER - EDITORIAL MASTHEAD
            ============================================ */
 
         .resume-header {
-            position: relative;
             margin-bottom: 36px;
             padding-bottom: 28px;
-        }
-
-        .resume-header::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 80px;
-            height: 4px;
-            background: linear-gradient(90deg, #000000 0%, #4a4a4a 100%);
+            border-bottom: 4px solid #1e1e1e;
+            position: relative;
         }
 
         .name {
-            font-size: 38pt;
-            font-weight: 800;
-            letter-spacing: -1.5px;
-            color: #000000;
-            margin-bottom: 8px;
-            line-height: 1.1;
+            font-size: 44pt;
+            font-weight: 900;
+            letter-spacing: -2px;
+            color: #1e1e1e;
+            margin-bottom: 4px;
+            line-height: 0.95;
+            text-transform: uppercase;
         }
 
         .headline {
             font-size: 13pt;
-            font-weight: 500;
-            color: #4a4a4a;
-            margin-bottom: 16px;
-            letter-spacing: 0.3px;
+            font-weight: 300;
+            color: #e63946;
+            margin-bottom: 18px;
+            letter-spacing: 0.5px;
+            font-style: italic;
         }
 
         .contact-info {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 20px;
-            font-size: 9.5pt;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 10px 20px;
+            font-size: 8.5pt;
             color: #4a4a4a;
             font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .contact-item {
-            position: relative;
-            padding-left: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .contact-item::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 12px;
-            height: 12px;
-            background: #000000;
-            clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+            content: '■';
+            color: #e63946;
+            font-size: 6pt;
         }
 
         .contact-info a {
-            color: #000000;
+            color: #1e1e1e;
             text-decoration: none;
             font-weight: 600;
-            border-bottom: 2px solid transparent;
-            transition: border-color 0.2s;
         }
 
         .contact-info a:hover {
-            border-bottom-color: #000000;
+            color: #e63946;
         }
 
         /* ============================================
-           SUMMARY - BOLD BOX
+           SUMMARY - PULL QUOTE STYLE
            ============================================ */
 
         .summary {
-            background: #f8f8f8;
-            padding: 20px 24px;
             margin-bottom: 32px;
-            border-left: 5px solid #000000;
+            padding: 20px 24px 20px 48px;
+            background: #1e1e1e;
+            color: #ffffff;
             line-height: 1.7;
-            color: #1a1a1a;
-            font-size: 10.5pt;
+            font-size: 11pt;
+            position: relative;
+            font-weight: 400;
+        }
+
+        .summary::before {
+            content: '';
+            position: absolute;
+            left: 20px;
+            top: 20px;
+            width: 4px;
+            height: calc(100% - 40px);
+            background: #e63946;
         }
 
         /* ============================================
-           SECTIONS - GEOMETRIC HEADERS
+           SECTION HEADERS - BOLD EDITORIAL
            ============================================ */
 
         .section {
@@ -125,48 +124,39 @@
         }
 
         .section-title {
-            font-size: 16pt;
-            font-weight: 800;
-            letter-spacing: -0.5px;
-            color: #000000;
-            margin-bottom: 20px;
+            font-size: 22pt;
+            font-weight: 900;
+            letter-spacing: -1px;
+            color: #1e1e1e;
+            margin-bottom: 18px;
             text-transform: uppercase;
-            font-size: 12pt;
-            letter-spacing: 1.5px;
-            position: relative;
-            padding-bottom: 12px;
-        }
-
-        .section-title::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 50px;
-            height: 3px;
-            background: #000000;
-        }
-
-        /* ============================================
-           ENTRY BLOCKS - STRONG HIERARCHY
-           ============================================ */
-
-        .entry {
-            margin-bottom: 24px;
-            page-break-inside: avoid;
             position: relative;
             padding-left: 16px;
         }
 
-        .entry::before {
+        .section-title::before {
             content: '';
             position: absolute;
             left: 0;
-            top: 6px;
-            width: 8px;
-            height: 8px;
-            background: #000000;
-            transform: rotate(45deg);
+            top: 4px;
+            width: 6px;
+            height: calc(100% - 8px);
+            background: #e63946;
+        }
+
+        /* ============================================
+           ENTRY BLOCKS - ASYMMETRIC LAYOUT
+           ============================================ -->
+
+        .entry {
+            margin-bottom: 24px;
+            page-break-inside: avoid;
+            padding-left: 16px;
+            border-left: 2px solid #f0f0f0;
+        }
+
+        .entry:hover {
+            border-left-color: #e63946;
         }
 
         .entry:last-child {
@@ -174,44 +164,52 @@
         }
 
         .entry-header {
+            margin-bottom: 6px;
+        }
+
+        .entry-title-row {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 6px;
-            gap: 12px;
+            margin-bottom: 4px;
         }
 
         .entry-title {
             font-size: 12pt;
             font-weight: 700;
-            color: #000000;
-            letter-spacing: -0.2px;
+            color: #1e1e1e;
+            letter-spacing: -0.3px;
         }
 
         .entry-date {
-            font-size: 9pt;
-            color: #4a4a4a;
+            font-size: 8pt;
+            color: #e63946;
             white-space: nowrap;
-            font-weight: 600;
-            background: #f0f0f0;
-            padding: 3px 10px;
-            border-radius: 2px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .entry-subtitle {
             font-size: 10pt;
             color: #4a4a4a;
             margin-bottom: 10px;
-            font-weight: 500;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-size: 9pt;
         }
 
         .entry-location {
-            font-size: 9.5pt;
+            font-size: 9pt;
             color: #6a6a6a;
+            font-weight: 400;
+            text-transform: none;
+            letter-spacing: 0;
         }
 
         /* ============================================
-           BULLETS - MODERN STYLE
+           BULLET POINTS - EDITORIAL STYLE
            ============================================ */
 
         .bullets {
@@ -221,104 +219,119 @@
 
         .bullets li {
             position: relative;
-            padding-left: 22px;
+            padding-left: 20px;
             margin-bottom: 8px;
-            line-height: 1.6;
+            line-height: 1.65;
         }
 
         .bullets li:before {
-            content: '';
+            content: '▶';
             position: absolute;
             left: 0;
-            top: 9px;
-            width: 6px;
-            height: 6px;
-            background: #000000;
-            transform: rotate(45deg);
+            color: #e63946;
+            font-size: 7pt;
+            top: 4px;
         }
 
         /* ============================================
-           SKILLS - GRID LAYOUT
+           SKILLS - MAGAZINE GRID
            ============================================ */
 
         .skills-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
         }
 
         .skill-category {
-            background: #f8f8f8;
+            background: #fafafa;
             padding: 16px 18px;
-            border-left: 4px solid #000000;
+            border-left: 4px solid #e63946;
+        }
+
+        .skill-category:nth-child(even) {
+            background: #1e1e1e;
+        }
+
+        .skill-category:nth-child(even) .skill-category-name {
+            color: #ffffff;
+        }
+
+        .skill-category:nth-child(even) .skill-list {
+            color: #cccccc;
         }
 
         .skill-category-name {
-            font-size: 10.5pt;
+            font-size: 9pt;
             font-weight: 700;
-            color: #000000;
+            color: #1e1e1e;
             margin-bottom: 8px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-size: 9pt;
+            letter-spacing: 0.8px;
         }
 
         .skill-list {
-            font-size: 9.5pt;
+            font-size: 9pt;
             color: #4a4a4a;
             line-height: 1.7;
             font-weight: 500;
         }
 
         /* ============================================
-           PROJECTS
+           PROJECTS - FEATURED STYLE
            ============================================ */
 
         .project-header {
+            margin-bottom: 6px;
+        }
+
+        .project-title-row {
             display: flex;
             justify-content: space-between;
             align-items: baseline;
-            margin-bottom: 6px;
-            gap: 12px;
+            margin-bottom: 4px;
         }
 
         .project-title {
             font-size: 12pt;
             font-weight: 700;
-            color: #000000;
+            color: #1e1e1e;
         }
 
         .project-link {
-            font-size: 9pt;
-            color: #000000;
+            font-size: 8pt;
+            color: #ffffff;
+            background: #e63946;
+            padding: 4px 10px;
             text-decoration: none;
             font-weight: 700;
-            border-bottom: 2px solid #000000;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .project-link:hover {
-            background: #000000;
-            color: #ffffff;
-            padding: 2px 6px;
-            margin: -2px -6px;
+            background: #1e1e1e;
         }
 
         .project-meta {
-            font-size: 9.5pt;
+            font-size: 9pt;
             color: #4a4a4a;
-            margin-bottom: 8px;
-            font-weight: 500;
+            margin-bottom: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
         .tech-stack {
-            font-size: 9pt;
+            font-size: 8.5pt;
             color: #6a6a6a;
-            margin-top: 8px;
+            margin-top: 10px;
+            padding: 8px 12px;
+            background: #f5f5f5;
+            border-left: 3px solid #1e1e1e;
             font-weight: 600;
-            background: #f0f0f0;
-            padding: 6px 12px;
-            display: inline-block;
-            border-radius: 2px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
         /* ============================================
@@ -332,13 +345,26 @@
         }
 
         .gpa {
-            font-size: 9pt;
-            color: #4a4a4a;
+            font-size: 8pt;
+            color: #e63946;
             white-space: nowrap;
-            font-weight: 600;
-            background: #f0f0f0;
-            padding: 3px 10px;
-            border-radius: 2px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        /* ============================================
+           DECORATIVE ELEMENTS
+           ============================================ */
+
+        .section-number {
+            font-size: 72pt;
+            font-weight: 900;
+            color: #f0f0f0;
+            position: absolute;
+            right: 20px;
+            top: -20px;
+            z-index: -1;
         }
 
         /* ============================================
@@ -347,7 +373,7 @@
 
         @media print {
             body {
-                padding: 0.4in 0.5in;
+                padding: 0.35in 0.5in;
             }
 
             .section {
@@ -357,12 +383,26 @@
             .entry {
                 page-break-inside: avoid;
             }
+
+            .summary {
+                background: #f5f5f5;
+                color: #1e1e1e;
+            }
+
+            .skill-category:nth-child(even) {
+                background: #f0f0f0;
+            }
+
+            .skill-category:nth-child(even) .skill-category-name,
+            .skill-category:nth-child(even) .skill-list {
+                color: #1e1e1e;
+            }
         }
     </style>
 </head>
 <body>
     <!-- ============================================
-         HEADER
+         HEADER - MASTHEAD
          ============================================ -->
     <header class="resume-header">
         <h1 class="name">{{personal.firstName}} {{personal.lastName}}</h1>
@@ -389,12 +429,12 @@
     </header>
 
     <!-- ============================================
-         SUMMARY
+         PROFILE / SUMMARY
          ============================================ -->
     {{#if personal.summary}}
-    <div class="summary">
+    <section class="summary">
         {{personal.summary}}
-    </div>
+    </section>
     {{/if}}
 
     <!-- ============================================
@@ -406,14 +446,16 @@
         {{#each experiences}}
         <div class="entry">
             <div class="entry-header">
-                <h3 class="entry-title">{{this.title}}</h3>
-                <span class="entry-date">
-                    {{this.startDate}}{{#if this.isCurrent}} - Present{{else}}{{#if this.endDate}} - {{this.endDate}}{{/if}}{{/if}}
-                </span>
-            </div>
-            <div class="entry-subtitle">
-                {{#if this.company}}{{this.company}}{{/if}}
-                {{#if this.location}}<span class="entry-location"> • {{this.location}}</span>{{/if}}
+                <div class="entry-title-row">
+                    <h3 class="entry-title">{{this.title}}</h3>
+                    <span class="entry-date">
+                        {{this.startDate}}{{#if this.isCurrent}}—Now{{else}}{{#if this.endDate}}—{{this.endDate}}{{/if}}{{/if}}
+                    </span>
+                </div>
+                <div class="entry-subtitle">
+                    {{#if this.company}}{{this.company}}{{/if}}
+                    {{#if this.location}}<span class="entry-location"> • {{this.location}}</span>{{/if}}
+                </div>
             </div>
             {{#if this.bullets}}
             <ul class="bullets">
@@ -436,18 +478,20 @@
         {{#each educations}}
         <div class="entry">
             <div class="entry-header">
-                <h3 class="entry-title">{{this.institution}}</h3>
-                <span class="entry-date">
-                    {{this.startDate}}{{#if this.isCurrent}} - Present{{else}}{{#if this.endDate}} - {{this.endDate}}{{/if}}{{/if}}
-                </span>
-            </div>
-            <div class="education-details">
-                <div class="entry-subtitle">
-                    {{this.degree}} in {{this.major}}
+                <div class="entry-title-row">
+                    <h3 class="entry-title">{{this.institution}}</h3>
+                    <span class="entry-date">
+                        {{this.startDate}}{{#if this.isCurrent}}—Now{{else}}{{#if this.endDate}}—{{this.endDate}}{{/if}}{{/if}}
+                    </span>
                 </div>
-                {{#if this.gpa}}
-                <span class="gpa">GPA: {{this.gpa}}</span>
-                {{/if}}
+                <div class="education-details">
+                    <div class="entry-subtitle">
+                        {{this.degree}} • {{this.major}}
+                    </div>
+                    {{#if this.gpa}}
+                    <span class="gpa">GPA {{this.gpa}}</span>
+                    {{/if}}
+                </div>
             </div>
             {{#if this.bullets}}
             <ul class="bullets">
@@ -470,16 +514,18 @@
         {{#each projects}}
         <div class="entry">
             <div class="project-header">
-                <h3 class="project-title">{{this.title}}</h3>
-                {{#if this.link}}
-                <a href="{{this.link}}" class="project-link" target="_blank">VIEW →</a>
-                {{/if}}
-            </div>
-            <div class="project-meta">
-                {{#if this.role}}{{this.role}}{{/if}}
-                {{#if this.startDate}}
-                 • {{this.startDate}}{{#if this.isCurrent}} - Present{{else}}{{#if this.endDate}} - {{this.endDate}}{{/if}}{{/if}}
-                {{/if}}
+                <div class="project-title-row">
+                    <h3 class="project-title">{{this.title}}</h3>
+                    {{#if this.link}}
+                    <a href="{{this.link}}" class="project-link" target="_blank">View</a>
+                    {{/if}}
+                </div>
+                <div class="project-meta">
+                    {{#if this.role}}{{this.role}}{{/if}}
+                    {{#if this.startDate}}
+                    {{#if this.role}} • {{/if}}{{this.startDate}}{{#if this.isCurrent}}—Now{{else}}{{#if this.endDate}}—{{this.endDate}}{{/if}}{{/if}}
+                    {{/if}}
+                </div>
             </div>
             {{#if this.bullets}}
             <ul class="bullets">
