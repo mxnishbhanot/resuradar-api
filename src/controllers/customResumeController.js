@@ -4,8 +4,12 @@ import { PDFParse } from "pdf-parse";
 import mammoth from 'mammoth';
 import { renderTemplateHTML } from "../services/template-engine.js";
 
-// Get user's draft resume or create new one
+// Note: getCustomResumeDraft is now redundant as the client should use
+// getCustomResume(id) or startNewResume(). I will remove its logic.
 export const getCustomResumeDraft = async (req, res) => {
+    // This endpoint is now deprecated in favor of using the ID-specific endpoint.
+    // If called, it should load the latest draft, but the frontend should be updated 
+    // to primarily use /:id or the new flow.
     try {
         let resume = await CustomResume.findOne({
             userId: req.user.userId,
@@ -13,19 +17,8 @@ export const getCustomResumeDraft = async (req, res) => {
         }).sort({ updatedAt: -1 });
 
         if (!resume) {
-            // Create new draft
-            resume = new CustomResume({
-                userId: req.user.userId,
-                isDraft: true,
-                personal: {},
-                educations: [],
-                experiences: [],
-                skills: [],
-                projects: []
-            });
-            await resume.save();
+            return res.json({ resume: null, message: "No active draft found." });
         }
-
         res.json({ resume });
     } catch (error) {
         console.error('Get draft error:', error);
@@ -34,16 +27,27 @@ export const getCustomResumeDraft = async (req, res) => {
 };
 
 // Auto-save draft (throttled on frontend)
+// CRITICAL FIX: Now accepts _id in the body. If _id is present, it updates. If not, it creates new.
 export const autoSaveCustomResumeDraft = async (req, res) => {
     try {
-        const { personal, educations, experiences, skills, projects } = req.body;
+        const { _id, personal, educations, experiences, skills, projects } = req.body;
 
-        let resume = await CustomResume.findOne({
-            userId: req.user.userId,
-            isDraft: true
-        });
+        let resume;
 
-        if (!resume) {
+        if (_id) {
+            // Attempt to find the specific document by ID
+            resume = await CustomResume.findOne({
+                _id,
+                userId: req.user.userId,
+            });
+
+            if (!resume) {
+                // This means the ID was invalid or deleted. Create a new one.
+                console.warn(`Resume ID ${_id} not found for user ${req.user.userId}. Creating new draft.`);
+                resume = new CustomResume({ userId: req.user.userId, isDraft: true });
+            }
+        } else {
+            // No ID provided: This is a brand new session/resume, so create a new document
             resume = new CustomResume({ userId: req.user.userId, isDraft: true });
         }
 
@@ -54,13 +58,16 @@ export const autoSaveCustomResumeDraft = async (req, res) => {
         if (skills) resume.skills = skills;
         if (projects) resume.projects = projects;
 
+        // Ensure it's marked as a draft whenever auto-save runs
+        resume.isDraft = true; 
+        
         resume.lastAutoSaveAt = new Date();
         resume.calculateCompletion();
         await resume.save();
 
         res.json({
             message: 'Draft auto-saved',
-            resume,
+            resume, // CRITICAL: Return the full resume object, including the _id (especially when new)
             savedAt: resume.lastAutoSaveAt
         });
     } catch (error) {
@@ -69,17 +76,20 @@ export const autoSaveCustomResumeDraft = async (req, res) => {
     }
 };
 
-// Save complete resume
+// Save complete resume (Manual Save)
 export const saveCustomResume = async (req, res) => {
     try {
-        const { personal, educations, experiences, skills, projects, isDraft } = req.body;
-
-        let resume = await CustomResume.findOne({
-            userId: req.user.userId,
-            isDraft: true
-        });
-
-        if (!resume) {
+        const { _id, personal, educations, experiences, skills, projects, isDraft } = req.body;
+        
+        let resume;
+        if (_id) {
+            // Update existing document if ID is provided
+            resume = await CustomResume.findOne({ _id, userId: req.user.userId });
+            if (!resume) {
+                return res.status(404).json({ error: 'Resume not found for save' });
+            }
+        } else {
+            // Create new document if no ID is provided
             resume = new CustomResume({ userId: req.user.userId });
         }
 
@@ -88,7 +98,8 @@ export const saveCustomResume = async (req, res) => {
         resume.experiences = experiences || [];
         resume.skills = skills || [];
         resume.projects = projects || [];
-        resume.isDraft = isDraft !== undefined ? isDraft : false;
+        // Set isDraft based on the request (e.g., false for final save, true for "save as draft")
+        resume.isDraft = isDraft !== undefined ? isDraft : false; 
 
         resume.calculateCompletion();
         await resume.save();
@@ -117,7 +128,7 @@ export const fetchAllCustomResumes = async (req, res) => {
     }
 };
 
-// Get specific resume
+// Get specific resume (used by the frontend to load by ID)
 export const getCustomResume = async (req, res) => {
     try {
         const resume = await CustomResume.findOne({
@@ -136,7 +147,7 @@ export const getCustomResume = async (req, res) => {
     }
 };
 
-// Update Resume
+// Update Resume (This is often redundant since auto-save handles PUTs, but kept for completeness)
 export const updateCustomResume = async (req, res) => {
     try {
         const resume = await CustomResume.findOne({
@@ -201,6 +212,7 @@ export const duplicateCustomResume = async (req, res) => {
             return res.status(404).json({ error: 'Resume not found' });
         }
 
+        // Create a new document with the same data
         const duplicate = new CustomResume({
             userId: req.user.userId,
             personal: original.personal,
@@ -208,7 +220,7 @@ export const duplicateCustomResume = async (req, res) => {
             experiences: original.experiences,
             skills: original.skills,
             projects: original.projects,
-            isDraft: true
+            isDraft: true // New copy is explicitly a draft
         });
 
         duplicate.calculateCompletion();
@@ -216,7 +228,7 @@ export const duplicateCustomResume = async (req, res) => {
 
         res.json({
             message: 'Resume duplicated successfully',
-            resume: duplicate
+            resume: duplicate // Return the new document
         });
     } catch (error) {
         console.error('Duplicate resume error:', error);
@@ -251,8 +263,8 @@ export const completeCustomResume = async (req, res) => {
 };
 
 export const uploadCustomResume = async (req, res) => {
+    // ... (same as original, but returns the new _id and resume object)
     try {
-
         if (!req.file || !req.user.userId) {
             return res.status(400).json({ error: 'File and authentication required' });
         }
@@ -295,6 +307,7 @@ export const uploadCustomResume = async (req, res) => {
 
         // Return state for frontend
         const resumeState = {
+            _id: newResume._id, // CRITICAL: Include the new ID
             personal: newResume.personal || {},
             educations: newResume.educations || [],
             experiences: newResume.experiences || [],
@@ -345,4 +358,3 @@ export const previewResumeController = async (req, res) => {
     return res.status(500).json({ message: "Failed to generate preview" });
   }
 };
-
