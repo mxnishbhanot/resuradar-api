@@ -1,30 +1,27 @@
-import puppeteer from "puppeteer";
+import { chromium } from "playwright";
 
 export const generatePDF = async (html) => {
-  const browser = await puppeteer.launch({
-    headless: "new",
+  const browser = await chromium.launch({
+    headless: true,
     args: [
       "--no-sandbox",
-      "--disable-setuid-sandbox",
-      "--disable-gpu",
-      "--disable-dev-shm-usage"
+      "--disable-setuid-sandbox"
     ]
   });
 
   const page = await browser.newPage();
 
-  // FIX: wait for all DOM + styles to load
+  // Set content & wait for DOM + network
   await page.setContent(html, {
-    waitUntil: ["domcontentloaded", "networkidle0"]
+    waitUntil: "networkidle"
   });
 
-  // FIX: ensure page has correct dimensions
-  await page.emulateMediaType("screen");
+  // Match Puppeteer behavior
+  await page.emulateMedia({ media: "screen" });
 
-  const pdf = await page.pdf({
+  const pdfBuffer = await page.pdf({
     format: "A4",
     printBackground: true,
-    preferCSSPageSize: true,
     margin: {
       top: "20mm",
       bottom: "20mm",
@@ -34,5 +31,5 @@ export const generatePDF = async (html) => {
   });
 
   await browser.close();
-  return pdf;
+  return pdfBuffer;
 };
