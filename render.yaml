@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: resume-exporter
+    env: node
+    dockerfilePath: ./Dockerfile
+    plan: free
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+    healthCheckPath: /
