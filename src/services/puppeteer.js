@@ -1,35 +1,63 @@
 import { chromium } from "playwright";
 
 export const generatePDF = async (html) => {
-  const browser = await chromium.launch({
-    headless: true,
-    args: [
-      "--no-sandbox",
-      "--disable-setuid-sandbox"
-    ]
-  });
+  let browser;
+  
+  try {
+    // Launch browser with optimal settings
+    browser = await chromium.launch({
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage", // Prevents memory issues
+        "--disable-gpu"
+      ]
+    });
 
-  const page = await browser.newPage();
+    const page = await browser.newPage();
 
-  // Set content & wait for DOM + network
-  await page.setContent(html, {
-    waitUntil: "networkidle"
-  });
+    // Set viewport for consistent rendering
+    await page.setViewportSize({
+      width: 1280,
+      height: 1024
+    });
 
-  // Match Puppeteer behavior
-  await page.emulateMedia({ media: "screen" });
+    // Set content with proper wait
+    await page.setContent(html, {
+      waitUntil: "networkidle", // Wait for all network requests
+      timeout: 30000 // 30 second timeout
+    });
 
-  const pdfBuffer = await page.pdf({
-    format: "A4",
-    printBackground: true,
-    margin: {
-      top: "20mm",
-      bottom: "20mm",
-      left: "15mm",
-      right: "15mm"
+    // CRITICAL FIX: Use print media type for PDF
+    await page.emulateMedia({ media: "print" });
+
+    // Wait a bit for fonts and rendering
+    await page.waitForTimeout(500);
+
+    // Generate PDF with proper settings
+    const pdfBuffer = await page.pdf({
+      format: "A4",
+      printBackground: true,
+      preferCSSPageSize: false, // Use A4 format, not CSS @page
+      margin: {
+        top: "12mm",    // Reduced margins for more content
+        bottom: "12mm",
+        left: "12mm",
+        right: "12mm"
+      },
+      displayHeaderFooter: false,
+      scale: 1.0 // Ensure no scaling
+    });
+
+    return pdfBuffer;
+
+  } catch (error) {
+    console.error("PDF Generation Error:", error);
+    throw new Error(`Failed to generate PDF: ${error.message}`);
+  } finally {
+    if (browser) {
+      await browser.close();
     }
-  });
-
-  await browser.close();
-  return pdfBuffer;
+  }
 };
