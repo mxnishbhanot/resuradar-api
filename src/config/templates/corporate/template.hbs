@@ -370,7 +370,7 @@
                     {{#if ../formatDate}}
                         {{formatDate this.startDate}}{{#if this.isCurrent}} - Present{{else}}{{#if this.endDate}} - {{formatDate this.endDate}}{{/if}}{{/if}}
                     {{else}}
-                        {{this.startDate}}{{#if this.isCurrent}} - Present{{else}}{{#if this.endDate}} - {{this.endDate}}{{/if}}{{/if}}
+                        {{formatDate this.startDate}}{{#if this.isCurrent}} - Present{{else}}{{#if this.endDate}} - {{formatDate this.endDate}}{{/if}}{{/if}}
                     {{/if}}
                 </span>
             </div>
@@ -404,7 +404,7 @@
                     {{#if ../formatDate}}
                         {{formatDate this.startDate}}{{#if this.isCurrent}} - Present{{else}}{{#if this.endDate}} - {{formatDate this.endDate}}{{/if}}{{/if}}
                     {{else}}
-                        {{this.startDate}}{{#if this.isCurrent}} - Present{{else}}{{#if this.endDate}} - {{this.endDate}}{{/if}}{{/if}}
+                        {{formatDate this.startDate}}{{#if this.isCurrent}} - Present{{else}}{{#if this.endDate}} - {{formatDate this.endDate}}{{/if}}{{/if}}
                     {{/if}}
                 </span>
             </div>
@@ -464,7 +464,7 @@
             <div class="project-meta">
                 {{#if this.role}}{{this.role}}{{/if}}
                 {{#if this.startDate}}
-                 | {{#if ../formatDate}}{{formatDate this.startDate}}{{else}}{{this.startDate}}{{/if}}{{#if this.isCurrent}} - Present{{else}}{{#if this.endDate}} - {{#if ../formatDate}}{{formatDate this.endDate}}{{else}}{{this.endDate}}{{/if}}{{/if}}{{/if}}
+                 | {{#if ../formatDate}}{{formatDate this.startDate}}{{else}}{{formatDate this.startDate}}{{/if}}{{#if this.isCurrent}} - Present{{else}}{{#if this.endDate}} - {{#if ../formatDate}}{{formatDate this.endDate}}{{else}}{{formatDate this.endDate}}{{/if}}{{/if}}{{/if}}
                 {{/if}}
             </div>
             {{#if this.bullets}}
