@@ -1,457 +1,196 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{personal.firstName}} {{personal.lastName}} - Resume</title>
-    <style>
-        /* ============================================
-           ULTRA-MINIMAL RESUME TEMPLATE
-           Maximum White Space | Thin Typography | Geometric Precision
-           ============================================ */
+  <meta charset="UTF-8" />
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      color: #222;
+      margin: 0;
+      padding: 28px;
+      line-height: 1.35;
+      font-size: 12px;
+    }
+    h1, h2, h3 {
+      margin: 0;
+      font-weight: 600;
+    }
+    h1 { font-size: 20px; }
+    h2 { font-size: 14px; margin-top: 18px; border-bottom: 1px solid #ddd; padding-bottom: 4px; }
+    h3 { font-size: 12px; }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-            font-size: 10pt;
-            line-height: 1.6;
-            color: #222222;
-            background: #ffffff;
-            max-width: 8in;
-            margin: 0 auto;
-            padding: 0.75in 0.85in;
-            font-weight: 300;
-        }
-
-        /* ============================================
-           HEADER - MINIMALIST
-           ============================================ */
-
-        .resume-header {
-            margin-bottom: 48px;
-        }
-
-        .name {
-            font-size: 28pt;
-            font-weight: 200;
-            letter-spacing: -0.5px;
-            color: #000000;
-            margin-bottom: 8px;
-        }
-
-        .headline {
-            font-size: 11pt;
-            font-weight: 300;
-            color: #888888;
-            margin-bottom: 20px;
-        }
-
-        .contact-info {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 24px;
-            font-size: 9pt;
-            color: #888888;
-            font-weight: 300;
-        }
-
-        .contact-info a {
-            color: #222222;
-            text-decoration: none;
-            font-weight: 300;
-        }
-
-        .contact-info a:hover {
-            color: #000000;
-        }
-
-        /* ============================================
-           SUMMARY - CLEAN TEXT
-           ============================================ */
-
-        .summary {
-            margin-bottom: 48px;
-            line-height: 1.7;
-            color: #222222;
-            font-size: 10pt;
-            max-width: 90%;
-        }
-
-        /* ============================================
-           SECTION HEADERS - ULTRA SIMPLE
-           ============================================ */
-
-        .section {
-            margin-bottom: 40px;
-        }
-
-        .section-title {
-            font-size: 10pt;
-            font-weight: 400;
-            letter-spacing: 0.5px;
-            color: #000000;
-            margin-bottom: 24px;
-            text-transform: uppercase;
-        }
-
-        /* ============================================
-           ENTRY BLOCKS - SPACIOUS
-           ============================================ */
-
-        .entry {
-            margin-bottom: 32px;
-            page-break-inside: avoid;
-        }
-
-        .entry:last-child {
-            margin-bottom: 0;
-        }
-
-        .entry-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 4px;
-        }
-
-        .entry-title {
-            font-size: 11pt;
-            font-weight: 400;
-            color: #000000;
-        }
-
-        .entry-date {
-            font-size: 8.5pt;
-            color: #888888;
-            white-space: nowrap;
-            font-weight: 300;
-        }
-
-        .entry-subtitle {
-            font-size: 9.5pt;
-            color: #666666;
-            margin-bottom: 12px;
-            font-weight: 300;
-        }
-
-        .entry-location {
-            font-size: 9pt;
-            color: #888888;
-        }
-
-        /* ============================================
-           BULLET POINTS - MINIMAL
-           ============================================ */
-
-        .bullets {
-            list-style: none;
-            margin-top: 12px;
-        }
-
-        .bullets li {
-            position: relative;
-            padding-left: 16px;
-            margin-bottom: 10px;
-            line-height: 1.65;
-            color: #444444;
-        }
-
-        .bullets li:before {
-            content: '·';
-            position: absolute;
-            left: 0;
-            color: #cccccc;
-            font-size: 14pt;
-        }
-
-        /* ============================================
-           SKILLS - SIMPLE LIST
-           ============================================ */
-
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 28px;
-        }
-
-        .skill-category {
-            margin-bottom: 8px;
-        }
-
-        .skill-category-name {
-            font-size: 9pt;
-            font-weight: 400;
-            color: #000000;
-            margin-bottom: 8px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-
-        .skill-list {
-            font-size: 9pt;
-            color: #666666;
-            line-height: 1.8;
-            font-weight: 300;
-        }
-
-        /* ============================================
-           PROJECTS - MINIMAL STYLE
-           ============================================ */
-
-        .project-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 4px;
-        }
-
-        .project-title {
-            font-size: 11pt;
-            font-weight: 400;
-            color: #000000;
-        }
-
-        .project-link {
-            font-size: 8.5pt;
-            color: #888888;
-            text-decoration: none;
-            font-weight: 300;
-        }
-
-        .project-link:hover {
-            color: #000000;
-        }
-
-        .project-meta {
-            font-size: 9pt;
-            color: #888888;
-            margin-bottom: 12px;
-            font-weight: 300;
-        }
-
-        .tech-stack {
-            font-size: 8.5pt;
-            color: #999999;
-            margin-top: 12px;
-            font-weight: 300;
-        }
-
-        /* ============================================
-           EDUCATION
-           ============================================ */
-
-        .education-details {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-        }
-
-        .gpa {
-            font-size: 8.5pt;
-            color: #888888;
-            white-space: nowrap;
-            font-weight: 300;
-        }
-
-        /* ============================================
-           PRINT OPTIMIZATION
-           ============================================ */
-
-        @media print {
-            body {
-                padding: 0.6in 0.7in;
-            }
-
-            .section {
-                page-break-inside: avoid;
-            }
-
-            .entry {
-                page-break-inside: avoid;
-            }
-        }
-
-        /* ============================================
-           RESPONSIVE
-           ============================================ */
-
-        @media screen and (max-width: 768px) {
-            body {
-                padding: 0.5in;
-            }
-
-            .entry-header {
-                flex-direction: column;
-                align-items: flex-start;
-            }
-
-            .entry-date {
-                margin-top: 4px;
-            }
-        }
-    </style>
+    .section { margin-top: 14px; }
+    .item { margin-bottom: 10px; }
+    .sub { color: #555; font-size: 11px; }
+    .flex { display: flex; justify-content: space-between; }
+    .tech-stack { font-size: 11px; color: #444; margin-top: 2px; }
+    ul { padding-left: 18px; margin: 4px 0; }
+    a { color: #0066cc; text-decoration: none; }
+  </style>
 </head>
+
 <body>
-    <!-- ============================================
-         HEADER
-         ============================================ -->
-    <header class="resume-header">
-        <h1 class="name">{{personal.firstName}} {{personal.lastName}}</h1>
-        {{#if personal.headline}}
-        <p class="headline">{{personal.headline}}</p>
+
+  {{!-- ===========================
+       HEADER
+  ============================ --}}
+  <header>
+    {{#if personal.firstName}}
+    <h1>{{personal.firstName}} {{personal.lastName}}</h1>
+    {{/if}}
+
+    {{#if personal.headline}}
+      <div class="sub">{{personal.headline}}</div>
+    {{/if}}
+
+    <div class="sub">
+      {{#if personal.email}}{{personal.email}} · {{/if}}
+      {{#if personal.phone}}{{personal.phone}} · {{/if}}
+      {{#if personal.location}}{{personal.location}}{{/if}}
+    </div>
+  </header>
+
+  {{!-- ===========================
+       SUMMARY
+  ============================ --}}
+  {{#if personal.summary}}
+  <div class="section">
+    <h2>Professional Summary</h2>
+    <div>{{personal.summary}}</div>
+  </div>
+  {{/if}}
+
+  {{!-- ===========================
+       SKILLS (Skill Categories)
+  ============================ --}}
+  {{#if skills.length}}
+  <div class="section">
+    <h2>Skills</h2>
+    {{#each skills}}
+      <div class="item">
+        <strong>{{name}}</strong>: {{#each skills}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
+      </div>
+    {{/each}}
+  </div>
+  {{/if}}
+
+  {{!-- ===========================
+       EXPERIENCE
+  ============================ --}}
+  {{#if experiences.length}}
+  <div class="section">
+    <h2>Experience</h2>
+    {{#each experiences}}
+      <div class="item">
+        <div class="flex">
+          <strong>{{title}}</strong>
+          <div class="sub">
+            {{#if isCurrent}}
+              {{formatDate startDate "MMM YYYY"}} – Present
+            {{else}}
+              {{formatDate startDate "MMM YYYY"}} – {{formatDate endDate "MMM YYYY"}}
+            {{/if}}
+          </div>
+        </div>
+
+        {{#if company}}
+          <div class="sub">{{company}}</div>
         {{/if}}
-        <div class="contact-info">
-            {{#if personal.email}}
-            <span><a href="mailto:{{personal.email}}">{{personal.email}}</a></span>
-            {{/if}}
-            {{#if personal.phone}}
-            <span>{{personal.phone}}</span>
-            {{/if}}
-            {{#if personal.location}}
-            <span>{{personal.location}}</span>
-            {{/if}}
-            {{#if personal.linkedin}}
-            <span><a href="{{personal.linkedin}}" target="_blank">linkedin</a></span>
-            {{/if}}
-            {{#if personal.github}}
-            <span><a href="{{personal.github}}" target="_blank">github</a></span>
-            {{/if}}
-        </div>
-    </header>
 
-    <!-- ============================================
-         SUMMARY
-         ============================================ -->
-    {{#if personal.summary}}
-    <section class="summary">
-        {{personal.summary}}
-    </section>
-    {{/if}}
+        {{#if link}}
+          <div class="sub"><a href="{{link}}">{{link}}</a></div>
+        {{/if}}
 
-    <!-- ============================================
-         EXPERIENCE
-         ============================================ -->
-    {{#if experiences.length}}
-    <section class="section">
-        <h2 class="section-title">Experience</h2>
-        {{#each experiences}}
-        <div class="entry">
-            <div class="entry-header">
-                <h3 class="entry-title">{{this.title}}</h3>
-                <span class="entry-date">
-                    {{formatDate this.startDate}}{{#if this.isCurrent}} – present{{else}}{{#if this.endDate}} – {{formatDate this.endDate}}{{/if}}{{/if}}
-                </span>
-            </div>
-            <div class="entry-subtitle">
-                {{#if this.company}}{{this.company}}{{/if}}
-                {{#if this.location}}<span class="entry-location"> / {{this.location}}</span>{{/if}}
-            </div>
-            {{#if this.bullets}}
-            <ul class="bullets">
-                {{#each this.bullets}}
-                <li>{{this}}</li>
-                {{/each}}
-            </ul>
-            {{/if}}
-        </div>
-        {{/each}}
-    </section>
-    {{/if}}
-
-    <!-- ============================================
-         EDUCATION
-         ============================================ -->
-    {{#if educations.length}}
-    <section class="section">
-        <h2 class="section-title">Education</h2>
-        {{#each educations}}
-        <div class="entry">
-            <div class="entry-header">
-                <h3 class="entry-title">{{this.institution}}</h3>
-                <span class="entry-date">
-                    {{formatDate this.startDate}}{{#if this.isCurrent}} – present{{else}}{{#if this.endDate}} – {{formatDate this.endDate}}{{/if}}{{/if}}
-                </span>
-            </div>
-            <div class="education-details">
-                <div class="entry-subtitle">
-                    {{this.degree}} / {{this.major}}
-                </div>
-                {{#if this.gpa}}
-                <span class="gpa">{{this.gpa}}</span>
-                {{/if}}
-            </div>
-            {{#if this.bullets}}
-            <ul class="bullets">
-                {{#each this.bullets}}
-                <li>{{this}}</li>
-                {{/each}}
-            </ul>
-            {{/if}}
-        </div>
-        {{/each}}
-    </section>
-    {{/if}}
-
-    <!-- ============================================
-         PROJECTS
-         ============================================ -->
-    {{#if projects.length}}
-    <section class="section">
-        <h2 class="section-title">Projects</h2>
-        {{#each projects}}
-        <div class="entry">
-            <div class="project-header">
-                <h3 class="project-title">{{this.title}}</h3>
-                {{#if this.link}}
-                <a href="{{this.link}}" class="project-link" target="_blank">link</a>
-                {{/if}}
-            </div>
-            <div class="project-meta">
-                {{#if this.role}}{{this.role}}{{/if}}
-                {{#if this.startDate}}
-                {{#if this.role}} / {{/if}}{{formatDate this.startDate}}{{#if this.isCurrent}} – present{{else}}{{#if this.endDate}} – {{formatDate this.endDate}}{{/if}}{{/if}}
-                {{/if}}
-            </div>
-            {{#if this.bullets}}
-            <ul class="bullets">
-                {{#each this.bullets}}
-                <li>{{this}}</li>
-                {{/each}}
-            </ul>
-            {{/if}}
-            {{#if this.techStack}}
-            <div class="tech-stack">
-                {{#each this.techStack}}{{this}}{{#unless @last}} / {{/unless}}{{/each}}
-            </div>
-            {{/if}}
-        </div>
-        {{/each}}
-    </section>
-    {{/if}}
-
-    <!-- ============================================
-         SKILLS
-         ============================================ -->
-    {{#if skills.length}}
-    <section class="section">
-        <h2 class="section-title">Skills</h2>
-        <div class="skills-grid">
-            {{#each skills}}
-            <div class="skill-category">
-                <div class="skill-category-name">{{this.name}}</div>
-                <div class="skill-list">
-                    {{#each this.skills}}{{this}}{{#unless @last}} / {{/unless}}{{/each}}
-                </div>
-            </div>
+        {{#if bullets.length}}
+          <ul>
+            {{#each bullets}}
+              <li>{{this}}</li>
             {{/each}}
+          </ul>
+        {{/if}}
+      </div>
+    {{/each}}
+  </div>
+  {{/if}}
+
+  {{!-- ===========================
+       PROJECTS
+  ============================ --}}
+  {{#if projects.length}}
+  <div class="section">
+    <h2>Projects</h2>
+    {{#each projects}}
+      <div class="item">
+
+        <div class="flex">
+          <strong>{{title}}</strong>
+          <div class="sub">
+            {{#if isCurrent}}
+              {{formatDate startDate "MMM YYYY"}} – Present
+            {{else}}
+              {{formatDate startDate "MMM YYYY"}} – {{formatDate endDate "MMM YYYY"}}
+            {{/if}}
+          </div>
         </div>
-    </section>
-    {{/if}}
+
+        {{#if role}}
+          <div class="sub">{{role}}</div>
+        {{/if}}
+
+        {{#if link}}
+          <div class="sub"><a href="{{link}}">{{link}}</a></div>
+        {{/if}}
+
+        {{#if techStack.length}}
+          <div class="tech-stack"><strong>Tech:</strong> {{#each techStack}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</div>
+        {{/if}}
+
+        {{#if bullets.length}}
+          <ul>
+            {{#each bullets}}
+              <li>{{this}}</li>
+            {{/each}}
+          </ul>
+        {{/if}}
+
+      </div>
+    {{/each}}
+  </div>
+  {{/if}}
+
+  {{!-- ===========================
+       EDUCATION
+  ============================ --}}
+  {{#if educations.length}}
+  <div class="section">
+    <h2>Education</h2>
+    {{#each educations}}
+      <div class="item">
+        <strong>{{degree}}, {{major}}</strong>
+
+        <div class="sub">{{institution}}</div>
+
+        <div class="sub">
+          {{#if isCurrent}}
+            {{formatDate startDate "MMM YYYY"}} – Present
+          {{else}}
+            {{formatDate startDate "MMM YYYY"}} – {{formatDate endDate "MMM YYYY"}}
+          {{/if}}
+          {{#if gpa}} · GPA: {{gpa}}{{/if}}
+        </div>
+
+        {{#if bullets.length}}
+          <ul>
+            {{#each bullets}}
+              <li>{{this}}</li>
+            {{/each}}
+          </ul>
+        {{/if}}
+
+      </div>
+    {{/each}}
+  </div>
+  {{/if}}
 
 </body>
 </html>
