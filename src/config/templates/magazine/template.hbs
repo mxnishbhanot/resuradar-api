@@ -440,7 +440,7 @@
     <!-- ============================================
          EXPERIENCE
          ============================================ -->
-    {{#if experiences}}
+    {{#if experiences.length}}
     <section class="section">
         <h2 class="section-title">Experience</h2>
         {{#each experiences}}
@@ -449,7 +449,7 @@
                 <div class="entry-title-row">
                     <h3 class="entry-title">{{this.title}}</h3>
                     <span class="entry-date">
-                        {{this.startDate}}{{#if this.isCurrent}}—Now{{else}}{{#if this.endDate}}—{{this.endDate}}{{/if}}{{/if}}
+                        {{formatDate this.startDate}}{{#if this.isCurrent}}—Now{{else}}{{#if this.endDate}}—{{formatDate this.endDate}}{{/if}}{{/if}}
                     </span>
                 </div>
                 <div class="entry-subtitle">
@@ -472,7 +472,7 @@
     <!-- ============================================
          EDUCATION
          ============================================ -->
-    {{#if educations}}
+    {{#if educations.length}}
     <section class="section">
         <h2 class="section-title">Education</h2>
         {{#each educations}}
@@ -481,7 +481,7 @@
                 <div class="entry-title-row">
                     <h3 class="entry-title">{{this.institution}}</h3>
                     <span class="entry-date">
-                        {{this.startDate}}{{#if this.isCurrent}}—Now{{else}}{{#if this.endDate}}—{{this.endDate}}{{/if}}{{/if}}
+                        {{formatDate this.startDate}}{{#if this.isCurrent}}—Now{{else}}{{#if this.endDate}}—{{formatDate this.endDate}}{{/if}}{{/if}}
                     </span>
                 </div>
                 <div class="education-details">
@@ -508,7 +508,7 @@
     <!-- ============================================
          PROJECTS
          ============================================ -->
-    {{#if projects}}
+    {{#if projects.length}}
     <section class="section">
         <h2 class="section-title">Projects</h2>
         {{#each projects}}
@@ -523,7 +523,7 @@
                 <div class="project-meta">
                     {{#if this.role}}{{this.role}}{{/if}}
                     {{#if this.startDate}}
-                    {{#if this.role}} • {{/if}}{{this.startDate}}{{#if this.isCurrent}}—Now{{else}}{{#if this.endDate}}—{{this.endDate}}{{/if}}{{/if}}
+                    {{#if this.role}} • {{/if}}{{formatDate this.startDate}}{{#if this.isCurrent}}—Now{{else}}{{#if this.endDate}}—{{formatDate this.endDate}}{{/if}}{{/if}}
                     {{/if}}
                 </div>
             </div>
@@ -547,7 +547,7 @@
     <!-- ============================================
          SKILLS
          ============================================ -->
-    {{#if skills}}
+    {{#if skills.length}}
     <section class="section">
         <h2 class="section-title">Skills</h2>
         <div class="skills-grid">
