@@ -11,7 +11,7 @@ const app = express();
 const allowedOrigins = [
   "https://resuradar-frontend.onrender.com",
   "https://resuradar-api.onrender.com",
-  "resuradar-api-production.up.railway.app",
+  "https://resuradar-api-production.up.railway.app",
   "https://resuradar-frontend-production.up.railway.app",
 ];
 
