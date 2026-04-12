@@ -49,8 +49,6 @@ export const renderTemplateHTML = (resumeData, templateName) => {
     }
   });
 
-  console.log("CLEAN DATA:", cleanData);
-
   // Read template file
   const html = fs.readFileSync(
     `src/config/templates/${templateName}/template.hbs`, 

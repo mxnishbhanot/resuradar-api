@@ -1,69 +1,67 @@
 import fs from "fs";
 import Resume from "../models/Resume.js";
-import User from "../models/User.js"; // ✅ make sure you have a User model
+import User from "../models/User.js";
 import { extractText } from "../services/fileService.js";
 import { analyzeResume, analyzeResumeToJob } from "../services/aiService.js";
+import { ensureString } from "../utils/validation.js";
+import { logger } from "../utils/logger.js";
+
+const removeTempFile = async (filePath) => {
+  if (!filePath) return;
+  try {
+    await fs.promises.unlink(filePath);
+  } catch (unlinkErr) {
+    logger.warn("Failed to delete temp file", { filePath, message: unlinkErr.message });
+  }
+};
+
+const ensureUserCanUpload = async (userId, filePath) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    await removeTempFile(filePath);
+    return { allowed: false, status: 404, message: "User not found" };
+  }
+
+  const resumeCount = await Resume.countDocuments({ userId });
+  if (!user.isPremium && resumeCount >= 3) {
+    await removeTempFile(filePath);
+    return {
+      allowed: false,
+      status: 403,
+      message: "You have reached your free upload limit (3 resumes). Upgrade to premium to upload more.",
+    };
+  }
+
+  return { allowed: true, user };
+};
 
 export const uploadResume = async (req, res) => {
   try {
-    // ✅ Ensure a file is uploaded
     if (!req.file) {
       return res.status(400).json({ success: false, message: "No file uploaded" });
     }
 
     const userId = req.user.userId;
     const filePath = req.file.path;
-
-    // ✅ Check user subscription & resume upload limit
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+    const uploadCheck = await ensureUserCanUpload(userId, filePath);
+    if (!uploadCheck.allowed) {
+      return res.status(uploadCheck.status).json({ success: false, message: uploadCheck.message });
     }
 
-    // Fetch how many resumes this user has uploaded
-    const resumeCount = await Resume.countDocuments({ userId });
-
-    // Allow only 3 uploads for free users
-    if (!user.isPremium && resumeCount >= 3) {
-      // delete uploaded file immediately to free storage
-      try {
-        fs.unlinkSync(filePath);
-      } catch (unlinkErr) {
-        console.warn("Failed to delete temp file:", unlinkErr.message);
-      }
-
-      return res.status(403).json({
-        success: false,
-        message:
-          "You have reached your free upload limit (3 resumes). Upgrade to premium to upload more.",
-      });
-    }
-
-    // ✅ Extract text from uploaded resume file
     const text = await extractText(filePath, req.file.mimetype);
-
-    // ✅ Analyze the resume text via AI service
     const analysis = await analyzeResume(text);
 
-    // ✅ Store resume and AI analysis in MongoDB
     const resume = await Resume.create({
       filename: req.file.originalname,
       text,
       analysis,
       score: analysis.score,
       userId,
-      type: 'standard',
+      type: "standard",
     });
 
-    // ✅ Delete temporary uploaded file
-    try {
-      fs.unlinkSync(filePath);
-    } catch (unlinkErr) {
-      console.warn("Failed to delete temp file:", unlinkErr.message);
-    }
+    await removeTempFile(filePath);
 
-    // ✅ Return structured response
     return res.status(200).json({
       success: true,
       message: "Resume analyzed successfully",
@@ -75,7 +73,8 @@ export const uploadResume = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error("uploadResume error:", err.message);
+    await removeTempFile(req.file?.path);
+    logger.error("uploadResume error", { message: err.message, requestId: req.requestId });
     return res.status(500).json({ success: false, message: "Failed to analyze resume" });
   }
 };
@@ -83,92 +82,66 @@ export const uploadResume = async (req, res) => {
 export const getResumes = async (req, res) => {
   try {
     const userId = req.user.userId;
-    const type = req.params.type === 'jd' ? 'job_match' : 'standard';
-    const resumes = await Resume.find({ userId , type }).sort({ createdAt: -1 });
-    resumes.map(resume => {
-      resume.score = resume.score || (resume.analysis && resume.analysis.free_feedback && resume.analysis.free_feedback.match_score) || 0;
-      return resume;
-    })
+    const type = req.params.type === "jd" ? "job_match" : "standard";
+    const resumes = await Resume.find({ userId, type }).sort({ createdAt: -1 });
+    resumes.forEach((resume) => {
+      resume.score =
+        resume.score ||
+        (resume.analysis && resume.analysis.free_feedback && resume.analysis.free_feedback.match_score) ||
+        0;
+    });
     return res.status(200).json({ success: true, data: resumes });
   } catch (err) {
-    console.error("getResumes error:", err.message);
+    logger.error("getResumes error", { message: err.message, requestId: req.requestId });
     return res.status(500).json({ success: false, message: "Failed to fetch resumes" });
   }
 };
 
 export const matchResumeToJob = async (req, res) => {
   try {
-    // ✅ Ensure a file is uploaded
-    console.log(req.body, req.file, req.user);
     if (!req.file) {
       return res.status(400).json({ success: false, message: "No file uploaded" });
     }
-    
+
+    const jobDescription = ensureString(req.body?.jobDescription, "jobDescription", {
+      min: 20,
+      max: 8000,
+    });
+
     const userId = req.user.userId;
     const filePath = req.file.path;
-
-    // ✅ Check user subscription & resume upload limit
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+    const uploadCheck = await ensureUserCanUpload(userId, filePath);
+    if (!uploadCheck.allowed) {
+      return res.status(uploadCheck.status).json({ success: false, message: uploadCheck.message });
     }
 
-    // Fetch how many resumes this user has uploaded
-    const resumeCount = await Resume.countDocuments({ userId });
-
-    // Allow only 3 uploads for free users
-    if (!user.isPremium && resumeCount >= 3) {
-      // delete uploaded file immediately to free storage
-      try {
-        fs.unlinkSync(filePath);
-      } catch (unlinkErr) {
-        console.warn("Failed to delete temp file:", unlinkErr.message);
-      }
-
-      return res.status(403).json({
-        success: false,
-        message:
-          "You have reached your free upload limit (3 resumes). Upgrade to premium to upload more.",
-      });
-    }
-
-    // ✅ Extract text from uploaded resume file
     const text = await extractText(filePath, req.file.mimetype);
+    const analysis = await analyzeResumeToJob(text, jobDescription);
 
-    // ✅ Analyze the resume text via AI service
-    const analysis = await analyzeResumeToJob(text, req.body.jobDescription);
-
-    // ✅ Store resume and AI analysis in MongoDB
     const resume = await Resume.create({
       filename: req.file.originalname,
       text,
       analysis,
-      score: analysis.score,
+      score: analysis.match_score || analysis.score || 0,
       userId,
-      type: 'job_match',
+      type: "job_match",
     });
 
-    // ✅ Delete temporary uploaded file
-    try {
-      fs.unlinkSync(filePath);
-    } catch (unlinkErr) {
-      console.warn("Failed to delete temp file:", unlinkErr.message);
-    }
+    await removeTempFile(filePath);
 
-    // ✅ Return structured response
     return res.status(200).json({
       success: true,
       message: "Resume analyzed successfully",
       data: {
         filename: resume.filename,
-        score: analysis.score,
+        score: resume.score,
         free_feedback: analysis.free_feedback,
         premium_feedback: analysis.premium_feedback,
       },
     });
   } catch (err) {
-    console.error("matchResumeToJob error:", err.message);
+    await removeTempFile(req.file?.path);
+    logger.error("matchResumeToJob error", { message: err.message, requestId: req.requestId });
     return res.status(500).json({ success: false, message: "Failed to analyze resume-job match" });
   }
 };

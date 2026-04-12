@@ -87,6 +87,8 @@ const customResumeSchema = new mongoose.Schema({
   lastAutoSaveAt: Date
 });
 
+customResumeSchema.index({ userId: 1, updatedAt: -1 });
+
 // Update timestamp on save
 customResumeSchema.pre('save', function(next) {
   this.updatedAt = new Date();

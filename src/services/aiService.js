@@ -1,70 +1,64 @@
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
+import { buildAiMetrics, normalizeResumeText, summarizeJobDescription } from "./aiPromptOptimizer.js";
+import { logger } from "../utils/logger.js";
+
 dotenv.config();
 
 const isProd = process.env.NODE_ENV === "production";
 
-// Initialize Gemini client
 const ai = isProd
   ? new GoogleGenAI({
-    vertexai: true,
-    project: process.env.GOOGLE_PROJECT_ID,
-    location: process.env.GOOGLE_REGION || "us-central1",
-    apiVersion: "v1",
-  })
+      vertexai: true,
+      project: process.env.GOOGLE_PROJECT_ID,
+      location: process.env.GOOGLE_REGION || "us-central1",
+      apiVersion: "v1",
+    })
   : new GoogleGenAI({
-    apiKey: process.env.GEMINI_API_KEY,
-    apiVersion: "v1alpha",
-  });
+      apiKey: process.env.GEMINI_API_KEY,
+      apiVersion: "v1alpha",
+    });
 
-console.log(
-  isProd
-    ? "✅ Gemini using Vertex AI (v1)"
-    : "🧪 Gemini using AI Studio (v1alpha)"
-);
+const getModel = () => (isProd ? "gemini-2.0-pro-001" : "gemini-2.0-flash-001");
+
+const extractJsonText = (response) =>
+  response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
+  response?.response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
+  "";
+
+const parseJsonResponse = (text) => {
+  const cleanedText = text.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+  const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
+  if (!jsonMatch) throw new Error("No valid JSON found in AI response");
+  return JSON.parse(jsonMatch[0]);
+};
+
+const detectField = (text) => {
+  const lower = String(text || "").toLowerCase();
+  if (/(sales|account manager|crm|quota|pipeline|territory|revenue)/.test(lower)) return "Sales";
+  if (/(software|developer|engineer|programming|code|javascript|python|java|react)/.test(lower)) return "Software Engineering";
+  if (/(marketing|brand|campaign|seo|content|social media)/.test(lower)) return "Marketing";
+  if (/(design|ux|ui|visual|figma|adobe|creative)/.test(lower)) return "Design";
+  if (/(finance|accounting|bookkeeping|audit|budget|financial)/.test(lower)) return "Finance";
+  if (/(hr|recruitment|human resources|talent acquisition|people operations)/.test(lower)) return "Human Resources";
+  if (/(operations|logistics|supply chain|process improvement)/.test(lower)) return "Operations";
+  if (/(data|analytics|machine learning|ai|statistics)/.test(lower)) return "Data / Analytics";
+  return "General";
+};
 
 export async function analyzeResume(resumeText) {
-  // --- Step 1: Detect job field from resume text ---
-  function detectField(text) {
-    const lower = text.toLowerCase();
+  const normalizedResume = normalizeResumeText(resumeText);
+  const detectedField = detectField(normalizedResume);
 
-    if (/(sales|account manager|revenue|quota|crm|territory)/.test(lower)) return "Sales";
-    if (/(software|developer|engineer|programming|code|javascript|python)/.test(lower)) return "Software Engineering";
-    if (/(marketing|brand|campaign|seo|content)/.test(lower)) return "Marketing";
-    if (/(design|ux|ui|visual|figma|adobe)/.test(lower)) return "Design";
-    if (/(finance|accounting|bookkeeping|budget|audit)/.test(lower)) return "Finance";
-    if (/(hr|recruitment|human resources|talent acquisition)/.test(lower)) return "Human Resources";
-    if (/(operations|supply chain|logistics|process)/.test(lower)) return "Operations";
-
-    return "General";
-  }
-
-  const detectedField = detectField(resumeText);
-
-  // --- Step 2: Build dynamic prompt based on detected field ---
   const prompt = `
-You are a professional resume reviewer specializing in ${detectedField} resumes.
+Analyze this ${detectedField} resume and return JSON only.
 
-First, confirm that the resume text indeed belongs to a ${detectedField} professional. 
-If it seems to belong to a different field, adjust your analysis accordingly.
+Requirements:
+- concise but accurate
+- score must be 0-100
+- no markdown
 
-Your task is to analyze the following resume text and return TWO types of feedback:
-
-1. Free Feedback — concise, motivational, and general (visible to all users)
-   - Resume Score (out of 100)
-   - 3 Key Strengths
-   - 3 High-Level Areas for Improvement
-   - Short overall summary (2–3 sentences)
-
-2. Premium Feedback — advanced insights (behind paywall)
-   - Deep analysis with specific recommendations
-   - 2–3 rewritten resume bullet points
-   - 3–5 portfolio/LinkedIn improvement tips
-   - 5 resume keywords (for ATS)
-   - A "Professional Level" (Junior / Mid-Level / Senior)
-
-Return valid JSON only, no markdown or extra commentary. The score MUST be a numeric value between 0 and 100.
-
+Schema:
 {
   "score": number,
   "free_feedback": {
@@ -82,43 +76,42 @@ Return valid JSON only, no markdown or extra commentary. The score MUST be a num
 }
 
 Resume text:
-${resumeText}
+${normalizedResume}
 `;
 
-  try {
-    const model = isProd ? "gemini-2.0-pro-001" : "gemini-2.0-flash-001";
+  const startedAt = Date.now();
 
+  try {
     const response = await ai.models.generateContent({
-      model,
+      model: getModel(),
       contents: prompt,
     });
 
-    const text =
-      response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
-      response?.response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    const text = extractJsonText(response);
+    if (!text) throw new Error("AI returned no text");
 
-    if (!text) {
-      console.error("Gemini returned no output. Response:", JSON.stringify(response, null, 2));
-      throw new Error("Gemini returned no text");
+    const parsed = parseJsonResponse(text);
+    let score = typeof parsed.score === "string" ? parseFloat(parsed.score) : parsed.score;
+    if (Number.isNaN(score) || score < 0 || score > 100) {
+      throw new Error(`Invalid score: ${parsed.score}`);
     }
 
-    // Clean potential markdown
-    let cleanedText = text.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No valid JSON found in Gemini response");
-
-    const parsed = JSON.parse(jsonMatch[0]);
-
-    // Validate score
-    let score = typeof parsed.score === "string" ? parseFloat(parsed.score) : parsed.score;
-    if (isNaN(score) || score < 0 || score > 100) throw new Error(`Invalid score: ${parsed.score}`);
+    if (!parsed.free_feedback || !parsed.premium_feedback) {
+      throw new Error("Incomplete AI response");
+    }
 
     score = Math.round(score);
 
-    if (!parsed.free_feedback || !parsed.premium_feedback)
-      throw new Error("Incomplete or malformed JSON from Gemini");
+    logger.info(
+      "AI request completed",
+      buildAiMetrics({
+        operation: "resume-analysis",
+        prompt,
+        responseText: text,
+        durationMs: Date.now() - startedAt,
+      })
+    );
 
-    // --- Step 3: Return normalized result ---
     return {
       detected_field: detectedField,
       score,
@@ -126,176 +119,104 @@ ${resumeText}
       premium_feedback: parsed.premium_feedback,
     };
   } catch (error) {
-    console.error("analyzeResume error:", error.message);
+    logger.error("analyzeResume error", { message: error.message });
     throw new Error("Failed to analyze resume with Gemini");
   }
 }
 
-
 export async function analyzeResumeToJob(resumeText, jobDescription) {
-  // --- Step 1: Detect job field from resume or JD ---
-  function detectField(text) {
-    const lower = text.toLowerCase();
-
-    if (/(sales|account manager|crm|quota|pipeline|territory|revenue)/.test(lower)) return "Sales";
-    if (/(software|developer|engineer|programming|code|javascript|python|java|react)/.test(lower)) return "Software Engineering";
-    if (/(marketing|brand|campaign|seo|content|social media)/.test(lower)) return "Marketing";
-    if (/(design|ux|ui|visual|figma|adobe|creative)/.test(lower)) return "Design";
-    if (/(finance|accounting|bookkeeping|audit|budget|financial)/.test(lower)) return "Finance";
-    if (/(hr|recruitment|human resources|talent acquisition|people operations)/.test(lower)) return "Human Resources";
-    if (/(operations|logistics|supply chain|process improvement)/.test(lower)) return "Operations";
-    if (/(data|analytics|machine learning|ai|statistics)/.test(lower)) return "Data / Analytics";
-
-    return "General";
-  }
-
+  const normalizedResume = normalizeResumeText(resumeText);
+  const compactJobDescription = summarizeJobDescription(jobDescription);
   const detectedField =
-    detectField(resumeText) !== "General"
-      ? detectField(resumeText)
-      : detectField(jobDescription);
+    detectField(normalizedResume) !== "General"
+      ? detectField(normalizedResume)
+      : detectField(compactJobDescription);
 
-  // --- Step 2: Dynamic prompt ---
   const prompt = `
-You are a professional resume reviewer specializing in ${detectedField} roles.
+Compare this resume to the job summary and return JSON only.
 
-Your task is to analyze how well the provided resume matches the job description. 
-Extract key requirements from the JD (skills, experience, qualifications, and keywords), 
-then compare them against the resume.
+Rules:
+- match_score must be 0-100
+- no markdown
+- keep recommendations specific
 
-Return ONLY valid JSON with NO markdown, NO commentary, and NO code blocks.
-The match_score MUST be numeric (not a string) between 0 and 100.
-
-Use this exact structure:
-
+Schema:
 {
   "free_feedback": {
-    "match_score": 75,
-    "match_level": "Good",
-    "summary": "Brief overview here",
-    "strengths": [
-      "Strength 1",
-      "Strength 2",
-      "Strength 3"
-    ],
-    "gaps": [
-      "Gap 1",
-      "Gap 2",
-      "Gap 3"
-    ]
+    "match_score": number,
+    "match_level": string,
+    "summary": string,
+    "strengths": [string],
+    "gaps": [string]
   },
   "premium_feedback": {
     "keyword_analysis": {
-      "total_keywords_in_jd": 20,
-      "matched_keywords": 15,
-      "missing_keywords": [
-        "Keyword 1",
-        "Keyword 2"
-      ]
+      "total_keywords_in_jd": number,
+      "matched_keywords": number,
+      "missing_keywords": [string]
     },
     "role_fit_breakdown": {
-      "technical_skills_fit": 80,
-      "experience_fit": 70,
-      "education_fit": 90,
-      "soft_skills_fit": 75,
-      "overall_fit": 75
+      "technical_skills_fit": number,
+      "experience_fit": number,
+      "education_fit": number,
+      "soft_skills_fit": number,
+      "overall_fit": number
     },
-    "recommendations": [
-      "Recommendation 1",
-      "Recommendation 2"
-    ],
+    "recommendations": [string],
     "suggested_rewrites": [
       {
-        "original": "Original text from resume",
-        "suggestion": "Improved version"
+        "original": string,
+        "suggestion": string
       }
     ]
   }
 }
 
-Job Description:
-${jobDescription}
+Role family: ${detectedField}
+
+Job summary:
+${compactJobDescription}
 
 Resume text:
-${resumeText}
+${normalizedResume}
 `;
 
-  try {
-    const model = isProd ? "gemini-2.0-pro-001" : "gemini-2.0-flash-001";
+  const startedAt = Date.now();
 
+  try {
     const response = await ai.models.generateContent({
-      model,
+      model: getModel(),
       contents: prompt,
     });
 
-    const text =
-      response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
-      response?.response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+    const text = extractJsonText(response);
+    if (!text) throw new Error("AI returned no text");
 
-    if (!text) {
-      console.error("Gemini returned no output. Response:", JSON.stringify(response, null, 2));
-      throw new Error("Gemini returned no text");
-    }
-
-    // --- Step 3: Clean and extract JSON safely ---
-    let cleanedText = text.replace(/```json\s*/g, '').replace(/```\s*/g, '');
-    const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      console.error("No JSON found in response:", text);
-      throw new Error("No valid JSON found in Gemini response");
-    }
-
-    const parsed = JSON.parse(jsonMatch[0]);
-
-    // --- Step 4: Validate structure and normalize numeric fields ---
+    const parsed = parseJsonResponse(text);
     if (!parsed.free_feedback || !parsed.premium_feedback) {
-      throw new Error("Missing required sections: free_feedback or premium_feedback");
+      throw new Error("Missing required AI sections");
     }
 
     let score = parsed.free_feedback.match_score;
     if (typeof score === "string") score = parseFloat(score);
-    if (isNaN(score) || score < 0 || score > 100)
+    if (Number.isNaN(score) || score < 0 || score > 100) {
       throw new Error(`Invalid match_score: ${parsed.free_feedback.match_score}`);
+    }
+
     score = Math.round(score);
-
-    // Validate expected keys
-    const freeKeys = ["match_level", "summary", "strengths", "gaps"];
-    for (const key of freeKeys) {
-      if (!parsed.free_feedback.hasOwnProperty(key)) {
-        throw new Error(`Missing key in free_feedback: ${key}`);
-      }
-    }
-
-    const premiumKeys = [
-      "keyword_analysis",
-      "role_fit_breakdown",
-      "recommendations",
-      "suggested_rewrites",
-    ];
-    for (const key of premiumKeys) {
-      if (!parsed.premium_feedback.hasOwnProperty(key)) {
-        throw new Error(`Missing key in premium_feedback: ${key}`);
-      }
-    }
-
-    // Normalize role fit breakdown
-    const fitKeys = [
-      "technical_skills_fit",
-      "experience_fit",
-      "education_fit",
-      "soft_skills_fit",
-    ];
-    fitKeys.forEach((k) => {
-      if (parsed.premium_feedback.role_fit_breakdown[k] !== undefined) {
-        let val = parsed.premium_feedback.role_fit_breakdown[k];
-        if (typeof val === "string") val = parseFloat(val);
-        parsed.premium_feedback.role_fit_breakdown[k] = Math.round(val);
-      }
-    });
-
-    // Sync overall_fit with score
+    parsed.premium_feedback.role_fit_breakdown = parsed.premium_feedback.role_fit_breakdown || {};
     parsed.premium_feedback.role_fit_breakdown.overall_fit = score;
 
-    // --- Step 5: Return clean, structured output ---
+    logger.info(
+      "AI request completed",
+      buildAiMetrics({
+        operation: "resume-job-match",
+        prompt,
+        responseText: text,
+        durationMs: Date.now() - startedAt,
+      })
+    );
+
     return {
       detected_field: detectedField,
       match_score: score,
@@ -307,18 +228,17 @@ ${resumeText}
       premium_feedback: parsed.premium_feedback,
     };
   } catch (error) {
-    console.error("❌ analyzeResumeToJob error:", error.message);
-    console.error("Full error:", error);
+    logger.error("analyzeResumeToJob error", { message: error.message });
     throw new Error(`Failed to analyze resume-job match with Gemini: ${error.message}`);
   }
 }
 
 export async function parseResumeToSchema(resumeText) {
+  const normalizedResume = normalizeResumeText(resumeText);
   const prompt = `
-You are an expert resume parser. Extract structured data from the following resume text.
+Extract resume data into JSON only.
 
-Return ONLY valid JSON matching this exact schema:
-
+Schema:
 {
   "personal": {
     "firstName": string,
@@ -352,7 +272,7 @@ Return ONLY valid JSON matching this exact schema:
   "skills": [
     {
       "name": string,
-      "level": string  // can be empty string if unknown
+      "level": string
     }
   ],
   "projects": [
@@ -365,53 +285,41 @@ Return ONLY valid JSON matching this exact schema:
   ]
 }
 
-Rules:
-- Infer first/last name from full name if needed.
-- For dates, use format like "2020", "Mar 2020", or "2020 – 2023". Keep as strings.
-- If end date is "Present", set "isCurrent": true and "endDate": "" or "Present".
-- Omit empty/null values — use empty strings instead of null.
-- If a section is missing, return empty array or empty object fields.
-- Do NOT include any markdown, explanation, or extra keys.
+Use empty strings or empty arrays when missing. No markdown.
 
 Resume text:
-${resumeText}
+${normalizedResume}
 `;
 
-  try {
-    const model = isProd ? "gemini-2.0-pro-001" : "gemini-2.0-flash-001";
+  const startedAt = Date.now();
 
+  try {
     const response = await ai.models.generateContent({
-      model,
-      contents: [{ role: 'user', parts: [{ text: prompt }] }],
+      model: getModel(),
+      contents: [{ role: "user", parts: [{ text: prompt }] }],
     });
 
-    const text = response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    const text = extractJsonText(response);
+    if (!text) throw new Error("AI returned empty response");
 
-    if (!text) {
-      throw new Error("AI returned empty response");
-    }
-
-    // Clean and extract JSON
-    let cleaned = text
-      .replace(/```(?:json)?\s*/g, '')
-      .replace(/```\s*/g, '')
-      .trim();
-
-    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) throw new Error("No JSON object found in response");
-
-    const parsed = JSON.parse(jsonMatch[0]);
-
-    // Basic validation
+    const parsed = parseJsonResponse(text);
     if (!parsed.personal || !parsed.educations || !parsed.experiences) {
       throw new Error("Incomplete schema in AI response");
     }
 
+    logger.info(
+      "AI request completed",
+      buildAiMetrics({
+        operation: "resume-parse",
+        prompt,
+        responseText: text,
+        durationMs: Date.now() - startedAt,
+      })
+    );
+
     return parsed;
   } catch (error) {
-    console.error('parseResumeToSchema error:', error.message);
-    throw new Error('Failed to parse resume structure with AI');
+    logger.error("parseResumeToSchema error", { message: error.message });
+    throw new Error("Failed to parse resume structure with AI");
   }
 }
-
-

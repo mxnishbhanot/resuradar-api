@@ -1,15 +1,20 @@
 import Contact from "../models/Contact.js";
+import { ensureEmail, ensureString } from "../utils/validation.js";
 
 export const submitContact = async (req, res) => {
   try {
-    const { name, email, message } = req.body;
+    const name = ensureString(req.body?.name, "name", { max: 120 });
+    const email = ensureEmail(req.body?.email);
+    const message = ensureString(req.body?.message, "message", { max: 2000 });
+    const website = typeof req.body?.website === "string" ? req.body.website.trim() : "";
 
-    // Simple validation
-    if (!name || !email || !message) {
-      return res.status(400).json({ success: false, message: "All fields are required" });
+    if (website) {
+      return res.status(200).json({
+        success: true,
+        message: "Your message has been received. We'll get back to you soon!",
+      });
     }
 
-    // Save contact
     const newContact = new Contact({ name, email, message });
     await newContact.save();
 
@@ -18,7 +23,6 @@ export const submitContact = async (req, res) => {
       message: "Your message has been received. We'll get back to you soon!",
     });
   } catch (error) {
-    console.error("Contact form submission error:", error.message);
     res.status(500).json({
       success: false,
       message: "Internal server error. Please try again later.",

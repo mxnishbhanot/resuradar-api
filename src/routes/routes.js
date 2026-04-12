@@ -1,52 +1,86 @@
 import express from "express";
 import multer from "multer";
 import { uploadResume, getResumes, matchResumeToJob } from "../controllers/resumeController.js";
-import { googleAuth } from "../controllers/authController.js";
+import { googleAuth, logout } from "../controllers/authController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 import { initiatePayment } from "../controllers/paymentController.js";
 import { verifyPayment } from "../controllers/verifyPaymentController.js";
 import { getUser } from "../controllers/userController.js";
 import { submitContact } from "../controllers/contactController.js";
-import { autoSaveCustomResumeDraft, completeCustomResume, deleteCustomResume, duplicateCustomResume, fetchAllCustomResumes, getCustomResume, getCustomResumeDraft, previewResumeController, saveCustomResume, uploadCustomResume } from "../controllers/customResumeController.js";
+import {
+  autoSaveCustomResumeDraft,
+  completeCustomResume,
+  deleteCustomResume,
+  duplicateCustomResume,
+  fetchAllCustomResumes,
+  getCustomResume,
+  getCustomResumeDraft,
+  previewResumeController,
+  saveCustomResume,
+  uploadCustomResume,
+} from "../controllers/customResumeController.js";
 import { exportResumeController } from "../controllers/export.controller.js";
+import { createRateLimiter } from "../middlewares/rateLimitMiddleware.js";
+import { HttpError, asyncHandler } from "../utils/httpError.js";
 
 const router = express.Router();
 
-// Multer setup for file uploads
-const upload = multer({ dest: "uploads/" });
+const createDiskUpload = (fileFilter, maxSize = 5 * 1024 * 1024) =>
+  multer({
+    dest: "uploads/",
+    limits: { fileSize: maxSize, files: 1 },
+    fileFilter,
+  });
 
-// ---------- Auth ----------
-router.post("/auth/google", googleAuth);
+const pdfOnlyUpload = createDiskUpload((req, file, cb) => {
+  if (file.mimetype === "application/pdf") return cb(null, true);
+  return cb(new HttpError(400, "Only PDF uploads are allowed"));
+});
 
-// ---------- User ----------
-router.get("/user/me", verifyToken, getUser);
+const builderUpload = createDiskUpload((req, file, cb) => {
+  const allowed = [
+    "application/pdf",
+    "application/msword",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ];
 
-// ---------- Resume ----------
-router.post("/resumes/upload", verifyToken, upload.single("resume"), uploadResume);
-router.post("/resumes/match", verifyToken, upload.single("resume"), matchResumeToJob);
-router.get("/resumes/:type", verifyToken, getResumes);
+  if (allowed.includes(file.mimetype) || file.mimetype.includes("wordprocessing")) {
+    return cb(null, true);
+  }
 
-// ---------- Custom Resume ----------
-router.get('/custom-resume/pdf', verifyToken,  exportResumeController)
-router.get("/custom-resume/draft", verifyToken, getCustomResumeDraft); // Kept for potential fallback, though less used now
-router.put("/custom-resume/draft/autosave", verifyToken, autoSaveCustomResumeDraft);
-router.post("/custom-resume/save", verifyToken, saveCustomResume); // Manual Save (Create New)
-router.get("/custom-resume/all", verifyToken, fetchAllCustomResumes);
-router.get("/custom-resume/:template/:resumeId", verifyToken, previewResumeController);
-router.get("/custom-resume/:id", verifyToken, getCustomResume);
-// FIX: Redirect PUT to saveCustomResume for consistent update logic (was updateCustomResume)
-router.put("/custom-resume/:id", verifyToken, saveCustomResume); // Manual Save (Update Existing)
-router.delete("/custom-resume/:id", verifyToken, deleteCustomResume);
-router.post("/custom-resume/:id/duplicate", verifyToken, duplicateCustomResume);
-router.post("/custom-resume/:id/complete", verifyToken, completeCustomResume);
-router.post("/custom-resume/upload", verifyToken, upload.single("resume"),  uploadCustomResume);
+  return cb(new HttpError(400, "Unsupported resume file type"));
+});
 
-// ---------- Payments ----------
-router.post("/initiate-payment", verifyToken, initiatePayment);
-router.get("/verify-payment/:orderId", verifyToken, verifyPayment);
+const authLimiter = createRateLimiter({ windowMs: 60_000, maxRequests: 20, keyPrefix: "auth" });
+const paymentLimiter = createRateLimiter({ windowMs: 60_000, maxRequests: 20, keyPrefix: "payment" });
+const uploadLimiter = createRateLimiter({ windowMs: 60_000, maxRequests: 12, keyPrefix: "upload" });
+const publicFormLimiter = createRateLimiter({ windowMs: 60_000, maxRequests: 8, keyPrefix: "contact" });
 
-//---------- Public ----------
-router.post("/contact", submitContact);
+router.post("/auth/google", authLimiter, asyncHandler(googleAuth));
+router.post("/auth/logout", asyncHandler(logout));
 
+router.get("/user/me", verifyToken, asyncHandler(getUser));
+
+router.post("/resumes/upload", verifyToken, uploadLimiter, pdfOnlyUpload.single("resume"), asyncHandler(uploadResume));
+router.post("/resumes/match", verifyToken, uploadLimiter, pdfOnlyUpload.single("resume"), asyncHandler(matchResumeToJob));
+router.get("/resumes/:type", verifyToken, asyncHandler(getResumes));
+
+router.get("/custom-resume/pdf", verifyToken, asyncHandler(exportResumeController));
+router.get("/custom-resume/draft", verifyToken, asyncHandler(getCustomResumeDraft));
+router.put("/custom-resume/draft/autosave", verifyToken, asyncHandler(autoSaveCustomResumeDraft));
+router.post("/custom-resume/save", verifyToken, asyncHandler(saveCustomResume));
+router.get("/custom-resume/all", verifyToken, asyncHandler(fetchAllCustomResumes));
+router.get("/custom-resume/:template/:resumeId", verifyToken, asyncHandler(previewResumeController));
+router.get("/custom-resume/:id", verifyToken, asyncHandler(getCustomResume));
+router.put("/custom-resume/:id", verifyToken, asyncHandler(saveCustomResume));
+router.delete("/custom-resume/:id", verifyToken, asyncHandler(deleteCustomResume));
+router.post("/custom-resume/:id/duplicate", verifyToken, asyncHandler(duplicateCustomResume));
+router.post("/custom-resume/:id/complete", verifyToken, asyncHandler(completeCustomResume));
+router.post("/custom-resume/upload", verifyToken, uploadLimiter, builderUpload.single("resume"), asyncHandler(uploadCustomResume));
+
+router.post("/initiate-payment", verifyToken, paymentLimiter, asyncHandler(initiatePayment));
+router.get("/verify-payment/:orderId", verifyToken, paymentLimiter, asyncHandler(verifyPayment));
+
+router.post("/contact", publicFormLimiter, asyncHandler(submitContact));
 
 export default router;

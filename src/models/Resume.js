@@ -12,4 +12,6 @@ const resumeSchema = new mongoose.Schema(
     { timestamps: true }
 );
 
+resumeSchema.index({ userId: 1, type: 1, createdAt: -1 });
+
 export default mongoose.model("Resume", resumeSchema);

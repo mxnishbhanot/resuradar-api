@@ -3,7 +3,10 @@ import cors from "cors";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import routes from "./routes/routes.js";
-import { encryptionMiddleware } from "./middlewares/encryptionMiddleware.js";
+import { requestContextMiddleware } from "./middlewares/requestContextMiddleware.js";
+import { securityHeadersMiddleware } from "./middlewares/securityHeadersMiddleware.js";
+import { HttpError } from "./utils/httpError.js";
+import { logger } from "./utils/logger.js";
 
 dotenv.config();
 const app = express();
@@ -22,36 +25,50 @@ if (process.env.NODE_ENV !== "production") {
 
 app.use(
   cors({
-    origin: function (origin, callback) {
+    origin(origin, callback) {
       if (!origin) return callback(null, true);
       if (allowedOrigins.includes(origin)) return callback(null, true);
-      console.warn(`❌ CORS blocked for origin: ${origin}`);
       return callback(new Error("CORS not allowed for this origin"));
     },
     credentials: true,
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "X-Encrypted"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
 app.options(/.*/, cors());
 
-
-app.use(express.json({ limit: "10mb" }));
-
+app.use(requestContextMiddleware);
+app.use(securityHeadersMiddleware);
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: false, limit: "1mb" }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
-
-app.use(encryptionMiddleware);
 
 app.use("/api", routes);
 
 app.get("/", (req, res) => {
-  res.status(200).send("🚀 Resume Analyzer API is running...");
+  res.status(200).send("Resume Analyzer API is running");
 });
 
 app.use((err, req, res, next) => {
-  console.error("❌ Unhandled error:", err.message);
-  res.status(500).json({ success: false, message: "Internal Server Error" });
+  const status = err instanceof HttpError ? err.status : 500;
+  const message = err instanceof HttpError ? err.message : "Internal Server Error";
+
+  logger.error("Unhandled error", {
+    requestId: req.requestId,
+    path: req.originalUrl,
+    method: req.method,
+    status,
+    message,
+    details: err instanceof HttpError ? err.details : undefined,
+  });
+
+  res.status(status).json({
+    success: false,
+    message,
+    requestId: req.requestId,
+    ...(err instanceof HttpError && err.details ? { details: err.details } : {}),
+  });
 });
 
 export default app;
