@@ -18,6 +18,10 @@ const allowedOrigins = [
   "https://resuradar-frontend-production.up.railway.app",
 ];
 
+if (process.env.VERCEL_FRONTEND_URL) {
+  allowedOrigins.push(process.env.VERCEL_FRONTEND_URL);
+}
+
 if (process.env.NODE_ENV !== "production") {
   allowedOrigins.push("http://localhost:4300");
   allowedOrigins.push("http://127.0.0.1:4300");
