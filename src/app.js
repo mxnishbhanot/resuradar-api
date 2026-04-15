@@ -16,6 +16,7 @@ const allowedOrigins = [
   "https://resuradar-api.onrender.com",
   "https://resuradar-api-production.up.railway.app",
   "https://resuradar-frontend-production.up.railway.app",
+  "https://resuradar-ui.vercel.app"
 ];
 
 if (process.env.VERCEL_FRONTEND_URL) {
@@ -27,20 +28,19 @@ if (process.env.NODE_ENV !== "production") {
   allowedOrigins.push("http://127.0.0.1:4300");
 }
 
-app.use(
-  cors({
-    origin(origin, callback) {
-      if (!origin) return callback(null, true);
-      if (allowedOrigins.includes(origin)) return callback(null, true);
-      return callback(new Error("CORS not allowed for this origin"));
-    },
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
-  })
-);
+const corsOptions = {
+  origin(origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    return callback(null, false);
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
 
-app.options(/.*/, cors());
+app.use(cors(corsOptions));
+app.options("*", cors(corsOptions));
 
 app.use(requestContextMiddleware);
 app.use(securityHeadersMiddleware);
@@ -55,6 +55,12 @@ app.get("/", (req, res) => {
 });
 
 app.use((err, req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  }
+
   const status = err instanceof HttpError ? err.status : 500;
   const message = err instanceof HttpError ? err.message : "Internal Server Error";
 
