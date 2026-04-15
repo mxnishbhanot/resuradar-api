@@ -40,7 +40,7 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.options("{*path}", cors(corsOptions));
 
 app.use(requestContextMiddleware);
 app.use(securityHeadersMiddleware);
