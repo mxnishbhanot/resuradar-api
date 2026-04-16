@@ -1,13 +1,18 @@
 import { GoogleGenAI } from "@google/genai";
 import dotenv from "dotenv";
 import { buildAiMetrics, normalizeResumeText, summarizeJobDescription } from "./aiPromptOptimizer.js";
+import {
+  AI_MAX_OUTPUT_TOKENS,
+  resumeAnalysisResponseSchema,
+  resumeJobMatchResponseSchema,
+  resumeParseResponseSchema,
+} from "./aiSchemas.js";
+import { aiResponseCacheGet, aiResponseCacheKey, aiResponseCacheSet } from "./aiResponseCache.js";
 import { logger } from "../utils/logger.js";
 
 dotenv.config();
 
-const isProd = process.env.NODE_ENV === "production";
-
-const ai = isProd
+const ai = process.env.NODE_ENV === "production"
   ? new GoogleGenAI({
       vertexai: true,
       project: process.env.GOOGLE_PROJECT_ID,
@@ -19,15 +24,44 @@ const ai = isProd
       apiVersion: "v1alpha",
     });
 
-const getModel = () => (isProd ? "gemini-2.0-pro-001" : "gemini-2.0-flash-001");
+const FLASH_MODEL = process.env.GEMINI_FLASH_MODEL || "gemini-2.0-flash-001";
+const PRO_MODEL = process.env.GEMINI_PRO_MODEL || "gemini-2.0-pro-001";
+
+const useProForAnalysis = () =>
+  ["1", "true", "yes"].includes(String(process.env.GEMINI_USE_PRO_FOR_ANALYSIS || "").toLowerCase());
+
+/**
+ * Tiered models: Flash for parsing (structured extraction) and for analysis/match by default.
+ * Set GEMINI_USE_PRO_FOR_ANALYSIS=1 to use Pro for resume analysis and job match in production.
+ */
+const getModel = (operation) => {
+  if (operation === "parse") {
+    return process.env.GEMINI_MODEL_PARSE || FLASH_MODEL;
+  }
+  if (operation === "analysis" || operation === "match") {
+    if (useProForAnalysis()) return PRO_MODEL;
+    return process.env.GEMINI_MODEL_ANALYSIS || FLASH_MODEL;
+  }
+  return FLASH_MODEL;
+};
+
+const schemaDisabled = () =>
+  ["1", "true", "yes"].includes(String(process.env.AI_DISABLE_JSON_SCHEMA || "").toLowerCase());
 
 const extractJsonText = (response) =>
   response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
   response?.response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
+  (typeof response?.text === "string" ? response.text.trim() : "") ||
   "";
 
 const parseJsonResponse = (text) => {
-  const cleanedText = text.replace(/```json\s*/g, "").replace(/```\s*/g, "");
+  const trimmed = String(text || "").trim();
+  try {
+    return JSON.parse(trimmed);
+  } catch {
+    /* fall through */
+  }
+  const cleanedText = trimmed.replace(/```json\s*/g, "").replace(/```\s*/g, "");
   const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("No valid JSON found in AI response");
   return JSON.parse(jsonMatch[0]);
@@ -46,9 +80,54 @@ const detectField = (text) => {
   return "General";
 };
 
+async function generateStructuredJson({ model, prompt, responseSchema, maxOutputTokens }) {
+  if (!schemaDisabled()) {
+    try {
+      return await ai.models.generateContent({
+        model,
+        contents: prompt,
+        config: {
+          responseMimeType: "application/json",
+          responseSchema,
+          maxOutputTokens,
+        },
+      });
+    } catch (err) {
+      logger.warn("Structured JSON generation failed, retrying without responseSchema", {
+        message: err.message,
+        model,
+      });
+    }
+  }
+
+  return ai.models.generateContent({
+    model,
+    contents: prompt,
+    config: { maxOutputTokens },
+  });
+}
+
 export async function analyzeResume(resumeText) {
   const normalizedResume = normalizeResumeText(resumeText);
   const detectedField = detectField(normalizedResume);
+  const model = getModel("analysis");
+
+  const cacheKey = aiResponseCacheKey(["resume-analysis", model, normalizedResume]);
+  const cached = aiResponseCacheGet(cacheKey);
+  if (cached) {
+    logger.info(
+      "AI request completed",
+      buildAiMetrics({
+        operation: "resume-analysis",
+        prompt: "",
+        responseText: JSON.stringify(cached),
+        durationMs: 0,
+        cacheHit: true,
+        model,
+      })
+    );
+    return cached;
+  }
 
   const prompt = `
 Analyze this ${detectedField} resume and return JSON only.
@@ -82,9 +161,11 @@ ${normalizedResume}
   const startedAt = Date.now();
 
   try {
-    const response = await ai.models.generateContent({
-      model: getModel(),
-      contents: prompt,
+    const response = await generateStructuredJson({
+      model,
+      prompt,
+      responseSchema: resumeAnalysisResponseSchema,
+      maxOutputTokens: AI_MAX_OUTPUT_TOKENS.resumeAnalysis,
     });
 
     const text = extractJsonText(response);
@@ -102,6 +183,15 @@ ${normalizedResume}
 
     score = Math.round(score);
 
+    const result = {
+      detected_field: detectedField,
+      score,
+      free_feedback: parsed.free_feedback,
+      premium_feedback: parsed.premium_feedback,
+    };
+
+    aiResponseCacheSet(cacheKey, result);
+
     logger.info(
       "AI request completed",
       buildAiMetrics({
@@ -109,15 +199,12 @@ ${normalizedResume}
         prompt,
         responseText: text,
         durationMs: Date.now() - startedAt,
+        cacheHit: false,
+        model,
       })
     );
 
-    return {
-      detected_field: detectedField,
-      score,
-      free_feedback: parsed.free_feedback,
-      premium_feedback: parsed.premium_feedback,
-    };
+    return result;
   } catch (error) {
     logger.error("analyzeResume error", { message: error.message });
     throw new Error("Failed to analyze resume with Gemini");
@@ -127,10 +214,26 @@ ${normalizedResume}
 export async function analyzeResumeToJob(resumeText, jobDescription) {
   const normalizedResume = normalizeResumeText(resumeText);
   const compactJobDescription = summarizeJobDescription(jobDescription);
-  const detectedField =
-    detectField(normalizedResume) !== "General"
-      ? detectField(normalizedResume)
-      : detectField(compactJobDescription);
+  const resumeField = detectField(normalizedResume);
+  const detectedField = resumeField !== "General" ? resumeField : detectField(compactJobDescription);
+  const model = getModel("match");
+
+  const cacheKey = aiResponseCacheKey(["resume-job-match", model, normalizedResume, compactJobDescription]);
+  const cached = aiResponseCacheGet(cacheKey);
+  if (cached) {
+    logger.info(
+      "AI request completed",
+      buildAiMetrics({
+        operation: "resume-job-match",
+        prompt: "",
+        responseText: JSON.stringify(cached),
+        durationMs: 0,
+        cacheHit: true,
+        model,
+      })
+    );
+    return cached;
+  }
 
   const prompt = `
 Compare this resume to the job summary and return JSON only.
@@ -184,9 +287,11 @@ ${normalizedResume}
   const startedAt = Date.now();
 
   try {
-    const response = await ai.models.generateContent({
-      model: getModel(),
-      contents: prompt,
+    const response = await generateStructuredJson({
+      model,
+      prompt,
+      responseSchema: resumeJobMatchResponseSchema,
+      maxOutputTokens: AI_MAX_OUTPUT_TOKENS.resumeJobMatch,
     });
 
     const text = extractJsonText(response);
@@ -207,17 +312,7 @@ ${normalizedResume}
     parsed.premium_feedback.role_fit_breakdown = parsed.premium_feedback.role_fit_breakdown || {};
     parsed.premium_feedback.role_fit_breakdown.overall_fit = score;
 
-    logger.info(
-      "AI request completed",
-      buildAiMetrics({
-        operation: "resume-job-match",
-        prompt,
-        responseText: text,
-        durationMs: Date.now() - startedAt,
-      })
-    );
-
-    return {
+    const result = {
       detected_field: detectedField,
       match_score: score,
       match_level: parsed.free_feedback.match_level,
@@ -227,6 +322,22 @@ ${normalizedResume}
       },
       premium_feedback: parsed.premium_feedback,
     };
+
+    aiResponseCacheSet(cacheKey, result);
+
+    logger.info(
+      "AI request completed",
+      buildAiMetrics({
+        operation: "resume-job-match",
+        prompt,
+        responseText: text,
+        durationMs: Date.now() - startedAt,
+        cacheHit: false,
+        model,
+      })
+    );
+
+    return result;
   } catch (error) {
     logger.error("analyzeResumeToJob error", { message: error.message });
     throw new Error(`Failed to analyze resume-job match with Gemini: ${error.message}`);
@@ -235,6 +346,25 @@ ${normalizedResume}
 
 export async function parseResumeToSchema(resumeText) {
   const normalizedResume = normalizeResumeText(resumeText);
+  const model = getModel("parse");
+
+  const cacheKey = aiResponseCacheKey(["resume-parse", model, normalizedResume]);
+  const cached = aiResponseCacheGet(cacheKey);
+  if (cached) {
+    logger.info(
+      "AI request completed",
+      buildAiMetrics({
+        operation: "resume-parse",
+        prompt: "",
+        responseText: JSON.stringify(cached),
+        durationMs: 0,
+        cacheHit: true,
+        model,
+      })
+    );
+    return cached;
+  }
+
   const prompt = `
 Extract resume data into JSON only.
 
@@ -294,9 +424,11 @@ ${normalizedResume}
   const startedAt = Date.now();
 
   try {
-    const response = await ai.models.generateContent({
-      model: getModel(),
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
+    const response = await generateStructuredJson({
+      model,
+      prompt,
+      responseSchema: resumeParseResponseSchema,
+      maxOutputTokens: AI_MAX_OUTPUT_TOKENS.resumeParse,
     });
 
     const text = extractJsonText(response);
@@ -307,6 +439,8 @@ ${normalizedResume}
       throw new Error("Incomplete schema in AI response");
     }
 
+    aiResponseCacheSet(cacheKey, parsed);
+
     logger.info(
       "AI request completed",
       buildAiMetrics({
@@ -314,6 +448,8 @@ ${normalizedResume}
         prompt,
         responseText: text,
         durationMs: Date.now() - startedAt,
+        cacheHit: false,
+        model,
       })
     );
 
