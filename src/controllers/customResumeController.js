@@ -1,6 +1,6 @@
 import CustomResume from "../models/CustomResume.js";
 import fs from "fs";
-import { parseResumeToSchema, GeminiRateLimitError } from "../services/aiService.js";
+import { parseResumeToSchema, GeminiModelUnavailableError, GeminiRateLimitError } from "../services/aiService.js";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 import { renderTemplateHTML } from "../services/template-engine.js";
@@ -310,6 +310,13 @@ export const uploadCustomResume = async (req, res) => {
     logger.error("Upload parsing error", { message: error.message, requestId: req.requestId });
     if (error instanceof GeminiRateLimitError) {
       return res.status(503).json({
+        success: false,
+        code: error.code,
+        error: error.message,
+      });
+    }
+    if (error instanceof GeminiModelUnavailableError) {
+      return res.status(502).json({
         success: false,
         code: error.code,
         error: error.message,

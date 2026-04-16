@@ -23,6 +23,17 @@ export class GeminiRateLimitError extends Error {
   }
 }
 
+/** Model ID not found or retired for this project (e.g. gemini-2.0-flash-001 for new users). */
+export class GeminiModelUnavailableError extends Error {
+  constructor() {
+    super(
+      "The configured Gemini model is not available for this API project. Defaults use gemini-2.5-flash / gemini-2.5-pro; set GEMINI_FLASH_MODEL, GEMINI_PRO_MODEL, or GEMINI_MODEL_PARSE to a model listed at https://ai.google.dev/gemini-api/docs/models"
+    );
+    this.name = "GeminiModelUnavailableError";
+    this.code = "GEMINI_MODEL_UNAVAILABLE";
+  }
+}
+
 const isGeminiQuotaOrRateLimitError = (err) => {
   const raw = String(err?.message || "");
   if (
@@ -42,6 +53,22 @@ const isGeminiQuotaOrRateLimitError = (err) => {
   return false;
 };
 
+const isGeminiModelNotFoundError = (err) => {
+  const raw = String(err?.message || "");
+  if (/404|"NOT_FOUND"|no longer available|not found for API version/i.test(raw)) return true;
+  try {
+    const j = JSON.parse(raw);
+    const e = j?.error;
+    if (e?.code === 404 || e?.status === "NOT_FOUND") return true;
+  } catch {
+    /* not JSON */
+  }
+  return false;
+};
+
+const shouldSkipSchemalessFallback = (err) =>
+  isGeminiQuotaOrRateLimitError(err) || isGeminiModelNotFoundError(err);
+
 const ai = process.env.NODE_ENV === "production"
   ? new GoogleGenAI({
       vertexai: true,
@@ -54,8 +81,10 @@ const ai = process.env.NODE_ENV === "production"
       apiVersion: "v1alpha",
     });
 
-const FLASH_MODEL = process.env.GEMINI_FLASH_MODEL || "gemini-2.0-flash-001";
-const PRO_MODEL = process.env.GEMINI_PRO_MODEL || "gemini-2.0-pro-001";
+// gemini-2.0-*-001 is retired for new API projects; 2.5 is the current default family.
+// Override with GEMINI_FLASH_MODEL / GEMINI_PRO_MODEL if your region exposes different IDs.
+const FLASH_MODEL = process.env.GEMINI_FLASH_MODEL || "gemini-2.5-flash";
+const PRO_MODEL = process.env.GEMINI_PRO_MODEL || "gemini-2.5-pro";
 
 const useProForAnalysis = () =>
   ["1", "true", "yes"].includes(String(process.env.GEMINI_USE_PRO_FOR_ANALYSIS || "").toLowerCase());
@@ -123,9 +152,10 @@ async function generateStructuredJson({ model, prompt, responseSchema, maxOutput
         },
       });
     } catch (err) {
-      if (isGeminiQuotaOrRateLimitError(err)) {
-        logger.warn("Gemini quota or rate limit; skipping second request without responseSchema", {
+      if (shouldSkipSchemalessFallback(err)) {
+        logger.warn("Gemini error not recoverable by schema fallback; skipping second request", {
           model,
+          reason: isGeminiModelNotFoundError(err) ? "model_not_found" : "quota_or_rate_limit",
         });
         throw err;
       }
@@ -249,6 +279,7 @@ ${normalizedResume}
   } catch (error) {
     logger.error("analyzeResume error", { message: error.message });
     if (isGeminiQuotaOrRateLimitError(error)) throw new GeminiRateLimitError();
+    if (isGeminiModelNotFoundError(error)) throw new GeminiModelUnavailableError();
     throw new Error("Failed to analyze resume with Gemini");
   }
 }
@@ -383,6 +414,7 @@ ${normalizedResume}
   } catch (error) {
     logger.error("analyzeResumeToJob error", { message: error.message });
     if (isGeminiQuotaOrRateLimitError(error)) throw new GeminiRateLimitError();
+    if (isGeminiModelNotFoundError(error)) throw new GeminiModelUnavailableError();
     throw new Error("Failed to analyze resume-job match with Gemini");
   }
 }
@@ -500,6 +532,7 @@ ${normalizedResume}
   } catch (error) {
     logger.error("parseResumeToSchema error", { message: error.message });
     if (isGeminiQuotaOrRateLimitError(error)) throw new GeminiRateLimitError();
+    if (isGeminiModelNotFoundError(error)) throw new GeminiModelUnavailableError();
     throw new Error("Failed to parse resume structure with AI");
   }
 }
