@@ -2,7 +2,7 @@ import fs from "fs";
 import Resume from "../models/Resume.js";
 import User from "../models/User.js";
 import { extractText } from "../services/fileService.js";
-import { analyzeResume, analyzeResumeToJob } from "../services/aiService.js";
+import { analyzeResume, analyzeResumeToJob, GeminiRateLimitError } from "../services/aiService.js";
 import { ensureString } from "../utils/validation.js";
 import { logger } from "../utils/logger.js";
 
@@ -75,6 +75,13 @@ export const uploadResume = async (req, res) => {
   } catch (err) {
     await removeTempFile(req.file?.path);
     logger.error("uploadResume error", { message: err.message, requestId: req.requestId });
+    if (err instanceof GeminiRateLimitError) {
+      return res.status(503).json({
+        success: false,
+        code: err.code,
+        message: err.message,
+      });
+    }
     return res.status(500).json({ success: false, message: "Failed to analyze resume" });
   }
 };
@@ -142,6 +149,13 @@ export const matchResumeToJob = async (req, res) => {
   } catch (err) {
     await removeTempFile(req.file?.path);
     logger.error("matchResumeToJob error", { message: err.message, requestId: req.requestId });
+    if (err instanceof GeminiRateLimitError) {
+      return res.status(503).json({
+        success: false,
+        code: err.code,
+        message: err.message,
+      });
+    }
     return res.status(500).json({ success: false, message: "Failed to analyze resume-job match" });
   }
 };

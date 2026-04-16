@@ -1,6 +1,6 @@
 import CustomResume from "../models/CustomResume.js";
 import fs from "fs";
-import { parseResumeToSchema } from "../services/aiService.js";
+import { parseResumeToSchema, GeminiRateLimitError } from "../services/aiService.js";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 import { renderTemplateHTML } from "../services/template-engine.js";
@@ -308,7 +308,14 @@ export const uploadCustomResume = async (req, res) => {
   } catch (error) {
     await removeTempFile(req.file?.path);
     logger.error("Upload parsing error", { message: error.message, requestId: req.requestId });
-    res.status(500).json({ error: "AI failed to parse resume. Try a clearer PDF." });
+    if (error instanceof GeminiRateLimitError) {
+      return res.status(503).json({
+        success: false,
+        code: error.code,
+        error: error.message,
+      });
+    }
+    return res.status(500).json({ error: "AI failed to parse resume. Try a clearer PDF." });
   }
 };
 

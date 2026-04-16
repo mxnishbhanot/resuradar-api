@@ -12,6 +12,36 @@ import { logger } from "../utils/logger.js";
 
 dotenv.config();
 
+/** Thrown when Gemini returns 429 / RESOURCE_EXHAUSTED (quota or rate limits). */
+export class GeminiRateLimitError extends Error {
+  constructor() {
+    super(
+      "Gemini API quota or rate limit was hit. Enable billing on your Google AI / Gemini project, wait for limits to reset, or reduce traffic. See https://ai.google.dev/gemini-api/docs/rate-limits"
+    );
+    this.name = "GeminiRateLimitError";
+    this.code = "GEMINI_RATE_LIMIT";
+  }
+}
+
+const isGeminiQuotaOrRateLimitError = (err) => {
+  const raw = String(err?.message || "");
+  if (
+    /"code"\s*:\s*429|"status"\s*:\s*"RESOURCE_EXHAUSTED"|RESOURCE_EXHAUSTED|quota exceeded|free_tier|rate limit|rate-limit/i.test(
+      raw
+    )
+  ) {
+    return true;
+  }
+  try {
+    const j = JSON.parse(raw);
+    const e = j?.error;
+    if (e?.code === 429 || e?.status === "RESOURCE_EXHAUSTED") return true;
+  } catch {
+    /* not JSON */
+  }
+  return false;
+};
+
 const ai = process.env.NODE_ENV === "production"
   ? new GoogleGenAI({
       vertexai: true,
@@ -93,9 +123,20 @@ async function generateStructuredJson({ model, prompt, responseSchema, maxOutput
         },
       });
     } catch (err) {
+      if (isGeminiQuotaOrRateLimitError(err)) {
+        logger.warn("Gemini quota or rate limit; skipping second request without responseSchema", {
+          model,
+        });
+        throw err;
+      }
       logger.warn("Structured JSON generation failed, retrying without responseSchema", {
         message: err.message,
         model,
+      });
+      return ai.models.generateContent({
+        model,
+        contents: prompt,
+        config: { maxOutputTokens },
       });
     }
   }
@@ -207,6 +248,7 @@ ${normalizedResume}
     return result;
   } catch (error) {
     logger.error("analyzeResume error", { message: error.message });
+    if (isGeminiQuotaOrRateLimitError(error)) throw new GeminiRateLimitError();
     throw new Error("Failed to analyze resume with Gemini");
   }
 }
@@ -340,7 +382,8 @@ ${normalizedResume}
     return result;
   } catch (error) {
     logger.error("analyzeResumeToJob error", { message: error.message });
-    throw new Error(`Failed to analyze resume-job match with Gemini: ${error.message}`);
+    if (isGeminiQuotaOrRateLimitError(error)) throw new GeminiRateLimitError();
+    throw new Error("Failed to analyze resume-job match with Gemini");
   }
 }
 
@@ -456,6 +499,7 @@ ${normalizedResume}
     return parsed;
   } catch (error) {
     logger.error("parseResumeToSchema error", { message: error.message });
+    if (isGeminiQuotaOrRateLimitError(error)) throw new GeminiRateLimitError();
     throw new Error("Failed to parse resume structure with AI");
   }
 }
