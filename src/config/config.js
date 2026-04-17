@@ -37,7 +37,7 @@ export const config = {
   ),
   gstDisplayNote: process.env.GST_DISPLAY_NOTE || "+ GST",
 
-  freeStandardAnalysisLimit: Number(process.env.FREE_STANDARD_ANALYSIS_LIMIT || "5"),
+  freeStandardAnalysisLimit: Number(process.env.FREE_STANDARD_ANALYSIS_LIMIT || "3"),
   freeJdMatchLimit: Number(process.env.FREE_JD_MATCH_LIMIT || "1"),
   /** When current standard count equals this (before a new run), the next analysis is the "wow" (0-based: 1 => second analysis). */
   standardAnalysesBeforeWow: Number(process.env.STANDARD_ANALYSES_BEFORE_WOW || "1"),
