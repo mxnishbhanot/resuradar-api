@@ -1,16 +1,16 @@
 import Resume from "../models/Resume.js";
-import User from "../models/User.js";
 import { config } from "../config/config.js";
 import { userHasActivePremium } from "../services/subscriptionAccess.js";
+import { ensureFreeTrialCounters } from "../services/trialUsageService.js";
 
 export const getUser = async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId).select("-password");
+    const user = await ensureFreeTrialCounters(req.user.userId);
     if (!user) return res.status(404).json({ message: "User not found" });
 
     const resumeCount = await Resume.countDocuments({ userId: user._id });
-    const standardUsed = await Resume.countDocuments({ userId: user._id, type: "standard" });
-    const jdUsed = await Resume.countDocuments({ userId: user._id, type: "job_match" });
+    const standardUsed = user.freeStandardAnalysesConsumed ?? 0;
+    const jdUsed = user.freeJdMatchesConsumed ?? 0;
     const hasActivePremium = userHasActivePremium(user);
 
     res.json({

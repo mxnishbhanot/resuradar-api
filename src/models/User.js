@@ -21,6 +21,10 @@ const userSchema = new mongoose.Schema({
   /** After N basic-only standard analyses, the next one reveals premium_feedback once. */
   premiumWowStandardUsed: { type: Boolean, default: false },
   lastSubscriptionWebhookAt: { type: Date, default: null },
+  /** Lifetime free ATS-style analyses consumed; not decremented when Resume rows are deleted. */
+  freeStandardAnalysesConsumed: { type: Number, default: null },
+  /** Lifetime free JD matches consumed; not decremented when Resume rows are deleted. */
+  freeJdMatchesConsumed: { type: Number, default: null },
 });
 
 export default mongoose.model("User", userSchema);

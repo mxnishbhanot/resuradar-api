@@ -1,4 +1,5 @@
 import fs from "fs";
+import mongoose from "mongoose";
 import Resume from "../models/Resume.js";
 import User from "../models/User.js";
 import { extractText } from "../services/fileService.js";
@@ -16,6 +17,9 @@ import {
   getFreeJdMatchLimit,
   getStandardAnalysesBeforeWow,
 } from "../services/subscriptionAccess.js";
+import { ensureFreeTrialCounters } from "../services/trialUsageService.js";
+
+const DISPLAY_NAME_MAX = 120;
 
 const removeTempFile = async (filePath) => {
   if (!filePath) return;
@@ -26,8 +30,11 @@ const removeTempFile = async (filePath) => {
   }
 };
 
+const isHistoryResumeId = (param) =>
+  typeof param === "string" && /^[a-fA-F0-9]{24}$/.test(param) && mongoose.Types.ObjectId.isValid(param);
+
 const checkStandardAnalysisQuota = async (userId, filePath) => {
-  const user = await User.findById(userId);
+  const user = await ensureFreeTrialCounters(userId);
   if (!user) {
     await removeTempFile(filePath);
     return { allowed: false, status: 404, message: "User not found", code: "USER_NOT_FOUND" };
@@ -36,9 +43,9 @@ const checkStandardAnalysisQuota = async (userId, filePath) => {
   if (isPro) {
     return { allowed: true, user, isPro: true };
   }
-  const standardCount = await Resume.countDocuments({ userId, type: "standard" });
+  const standardConsumed = user.freeStandardAnalysesConsumed ?? 0;
   const limit = getFreeStandardAnalysisLimit();
-  if (standardCount >= limit) {
+  if (standardConsumed >= limit) {
     await removeTempFile(filePath);
     return {
       allowed: false,
@@ -46,14 +53,14 @@ const checkStandardAnalysisQuota = async (userId, filePath) => {
       code: "FREE_ANALYSIS_LIMIT",
       message:
         "You've used your free resume analyses. Upgrade to unlock unlimited insights and match your resume with job descriptions.",
-      limits: { standardUsed: standardCount, standardLimit: limit },
+      limits: { standardUsed: standardConsumed, standardLimit: limit },
     };
   }
-  return { allowed: true, user, isPro: false, standardCount };
+  return { allowed: true, user, isPro: false, standardConsumed };
 };
 
 const checkJdMatchQuota = async (userId, filePath) => {
-  const user = await User.findById(userId);
+  const user = await ensureFreeTrialCounters(userId);
   if (!user) {
     await removeTempFile(filePath);
     return { allowed: false, status: 404, message: "User not found", code: "USER_NOT_FOUND" };
@@ -62,9 +69,9 @@ const checkJdMatchQuota = async (userId, filePath) => {
   if (isPro) {
     return { allowed: true, user, isPro: true };
   }
-  const jdCount = await Resume.countDocuments({ userId, type: "job_match" });
+  const jdConsumed = user.freeJdMatchesConsumed ?? 0;
   const limit = getFreeJdMatchLimit();
-  if (jdCount >= limit) {
+  if (jdConsumed >= limit) {
     await removeTempFile(filePath);
     return {
       allowed: false,
@@ -72,10 +79,10 @@ const checkJdMatchQuota = async (userId, filePath) => {
       code: "FREE_JD_MATCH_LIMIT",
       message:
         "You've used your free job match trial. Upgrade for unlimited resume-to-job-description matching and full premium insights.",
-      limits: { jdUsed: jdCount, jdLimit: limit },
+      limits: { jdUsed: jdConsumed, jdLimit: limit },
     };
   }
-  return { allowed: true, user, isPro: false, jdCount };
+  return { allowed: true, user, isPro: false, jdConsumed };
 };
 
 export const uploadResume = async (req, res) => {
@@ -96,13 +103,13 @@ export const uploadResume = async (req, res) => {
       });
     }
 
-    const { user, isPro, standardCount } = uploadCheck;
+    const { user, isPro, standardConsumed } = uploadCheck;
     const wowAt = getStandardAnalysesBeforeWow();
     const isWow =
       !isPro &&
       !user.premiumWowStandardUsed &&
-      typeof standardCount === "number" &&
-      standardCount === wowAt;
+      typeof standardConsumed === "number" &&
+      standardConsumed === wowAt;
 
     const text = await extractText(filePath, req.file.mimetype);
     const analysis = await analyzeResume(text);
@@ -115,6 +122,8 @@ export const uploadResume = async (req, res) => {
       userId,
       type: "standard",
     });
+
+    await User.findByIdAndUpdate(userId, { $inc: { freeStandardAnalysesConsumed: 1 } });
 
     if (isWow) {
       await User.findByIdAndUpdate(userId, { $set: { premiumWowStandardUsed: true } });
@@ -199,7 +208,7 @@ export const matchResumeToJob = async (req, res) => {
       });
     }
 
-    const { isPro, jdCount } = uploadCheck;
+    const { isPro, jdConsumed } = uploadCheck;
     const text = await extractText(filePath, req.file.mimetype);
     const analysis = await analyzeResumeToJob(text, jobDescription);
 
@@ -212,9 +221,11 @@ export const matchResumeToJob = async (req, res) => {
       type: "job_match",
     });
 
+    await User.findByIdAndUpdate(userId, { $inc: { freeJdMatchesConsumed: 1 } });
+
     await removeTempFile(filePath);
 
-    const includePremium = isPro || (!isPro && jdCount === 0);
+    const includePremium = isPro || (!isPro && jdConsumed === 0);
     const payload = {
       filename: resume.filename,
       score: resume.score,
@@ -247,5 +258,61 @@ export const matchResumeToJob = async (req, res) => {
       });
     }
     return res.status(500).json({ success: false, message: "Failed to analyze resume-job match" });
+  }
+};
+
+export const deleteResumeHistory = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isHistoryResumeId(id)) {
+      return res.status(400).json({ success: false, message: "Invalid resume id" });
+    }
+    const userId = req.user.userId;
+    const doc = await Resume.findOne({ _id: id, userId });
+    if (!doc) {
+      return res.status(404).json({ success: false, message: "Resume not found" });
+    }
+    if (doc.type !== "standard" && doc.type !== "job_match") {
+      return res.status(400).json({ success: false, message: "This resume cannot be deleted here" });
+    }
+    await Resume.deleteOne({ _id: id, userId });
+    return res.status(200).json({ success: true, message: "Resume deleted" });
+  } catch (err) {
+    logger.error("deleteResumeHistory error", { message: err.message, requestId: req.requestId });
+    return res.status(500).json({ success: false, message: "Failed to delete resume" });
+  }
+};
+
+export const patchResumeDisplayName = async (req, res) => {
+  try {
+    const { id } = req.params;
+    if (!isHistoryResumeId(id)) {
+      return res.status(400).json({ success: false, message: "Invalid resume id" });
+    }
+    const raw = req.body?.displayName;
+    if (raw !== null && raw !== undefined && typeof raw !== "string") {
+      return res.status(400).json({ success: false, message: "displayName must be a string or null" });
+    }
+    const trimmed = typeof raw === "string" ? raw.trim() : "";
+    if (trimmed.length > DISPLAY_NAME_MAX) {
+      return res.status(400).json({
+        success: false,
+        message: `displayName must be at most ${DISPLAY_NAME_MAX} characters`,
+      });
+    }
+    const displayName = trimmed.length ? trimmed : null;
+    const userId = req.user.userId;
+    const updated = await Resume.findOneAndUpdate(
+      { _id: id, userId, type: { $in: ["standard", "job_match"] } },
+      { $set: { displayName } },
+      { new: true }
+    );
+    if (!updated) {
+      return res.status(404).json({ success: false, message: "Resume not found" });
+    }
+    return res.status(200).json({ success: true, data: updated });
+  } catch (err) {
+    logger.error("patchResumeDisplayName error", { message: err.message, requestId: req.requestId });
+    return res.status(500).json({ success: false, message: "Failed to update resume" });
   }
 };

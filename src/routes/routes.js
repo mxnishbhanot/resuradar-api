@@ -1,6 +1,12 @@
 import express from "express";
 import multer from "multer";
-import { uploadResume, getResumes, matchResumeToJob } from "../controllers/resumeController.js";
+import {
+  uploadResume,
+  getResumes,
+  matchResumeToJob,
+  deleteResumeHistory,
+  patchResumeDisplayName,
+} from "../controllers/resumeController.js";
 import { googleAuth, logout } from "../controllers/authController.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";
 import { initiatePayment } from "../controllers/paymentController.js";
@@ -63,6 +69,8 @@ router.get("/user/me", verifyToken, asyncHandler(getUser));
 
 router.post("/resumes/upload", verifyToken, uploadLimiter, pdfOnlyUpload.single("resume"), asyncHandler(uploadResume));
 router.post("/resumes/match", verifyToken, uploadLimiter, pdfOnlyUpload.single("resume"), asyncHandler(matchResumeToJob));
+router.patch("/resumes/:id", verifyToken, asyncHandler(patchResumeDisplayName));
+router.delete("/resumes/:id", verifyToken, asyncHandler(deleteResumeHistory));
 router.get("/resumes/:type", verifyToken, asyncHandler(getResumes));
 
 router.get("/custom-resume/pdf", verifyToken, asyncHandler(exportResumeController));

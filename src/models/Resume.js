@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 const resumeSchema = new mongoose.Schema(
     {
         filename: String,
+        /** User-defined label for dashboard cards (ATS / job match). */
+        displayName: { type: String, default: null, maxlength: 120 },
         text: String,
         analysis: { type: Object, required: true },
         score: Number,
