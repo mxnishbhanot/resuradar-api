@@ -7,6 +7,19 @@ export const AI_MAX_OUTPUT_TOKENS = {
   resumeParse: 8192,
 };
 
+const resumeScoreFactorSchema = {
+  type: Type.OBJECT,
+  required: ["name", "impact", "note"],
+  properties: {
+    name: { type: Type.STRING, description: "Short factor label e.g. Impact of achievements" },
+    impact: {
+      type: Type.STRING,
+      description: "Exactly one of: high, medium, low — how much this factor lowered or raised the score",
+    },
+    note: { type: Type.STRING, description: "One plain-language sentence; must align with the numeric score" },
+  },
+};
+
 export const resumeAnalysisResponseSchema = {
   type: Type.OBJECT,
   required: ["score", "free_feedback", "premium_feedback"],
@@ -14,11 +27,20 @@ export const resumeAnalysisResponseSchema = {
     score: { type: Type.NUMBER, description: "Score from 0 to 100" },
     free_feedback: {
       type: Type.OBJECT,
-      required: ["strengths", "improvements", "summary"],
+      required: ["strengths", "improvements", "summary", "score_explanation"],
       properties: {
         strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
         improvements: { type: Type.ARRAY, items: { type: Type.STRING } },
         summary: { type: Type.STRING },
+        score_explanation: {
+          type: Type.STRING,
+          description: "1-3 sentences explaining why this score was chosen; plain language, no markdown",
+        },
+        score_factors: {
+          type: Type.ARRAY,
+          items: resumeScoreFactorSchema,
+          description: "0-5 key drivers of the score (optional but preferred)",
+        },
       },
     },
     premium_feedback: {

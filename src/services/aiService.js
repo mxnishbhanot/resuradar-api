@@ -206,6 +206,8 @@ Analyze this ${detectedField} resume and return JSON only.
 Requirements:
 - concise but accurate
 - score must be 0-100
+- score_explanation: 1-3 sentences in plain language on why that score fits this resume (must align with the number)
+- score_factors: optional; up to 5 items; each note one sentence; impact must be exactly high, medium, or low
 - no markdown
 
 Schema:
@@ -214,7 +216,9 @@ Schema:
   "free_feedback": {
     "strengths": [string],
     "improvements": [string],
-    "summary": string
+    "summary": string,
+    "score_explanation": string,
+    "score_factors": [ { "name": string, "impact": "high"|"medium"|"low", "note": string } ]
   },
   "premium_feedback": {
     "detailed_suggestions": [string],
@@ -252,12 +256,38 @@ ${normalizedResume}
       throw new Error("Incomplete AI response");
     }
 
+    const fb = parsed.free_feedback;
+    if (typeof fb.score_explanation !== "string" || !fb.score_explanation.trim()) {
+      throw new Error("Incomplete AI response: score_explanation");
+    }
+
+    const allowedImpact = new Set(["high", "medium", "low"]);
+    const rawFactors = Array.isArray(fb.score_factors) ? fb.score_factors : [];
+    const score_factors = rawFactors
+      .slice(0, 5)
+      .map((f) => {
+        if (!f || typeof f !== "object") return null;
+        const name = typeof f.name === "string" ? f.name.trim() : "";
+        const note = typeof f.note === "string" ? f.note.trim() : "";
+        const impact = typeof f.impact === "string" ? f.impact.trim().toLowerCase() : "";
+        const impactNorm = allowedImpact.has(impact) ? impact : "medium";
+        if (!name || !note) return null;
+        return { name, impact: impactNorm, note };
+      })
+      .filter(Boolean);
+
     score = Math.round(score);
+
+    const free_feedback = {
+      ...fb,
+      score_explanation: fb.score_explanation.trim(),
+      score_factors,
+    };
 
     const result = {
       detected_field: detectedField,
       score,
-      free_feedback: parsed.free_feedback,
+      free_feedback,
       premium_feedback: parsed.premium_feedback,
     };
 
