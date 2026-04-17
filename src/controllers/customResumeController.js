@@ -1,6 +1,8 @@
 import CustomResume from "../models/CustomResume.js";
+import User from "../models/User.js";
 import fs from "fs";
 import { parseResumeToSchema, GeminiModelUnavailableError, GeminiRateLimitError } from "../services/aiService.js";
+import { userHasActivePremium, isFreeBuilderTemplate } from "../services/subscriptionAccess.js";
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 import { renderTemplateHTML } from "../services/template-engine.js";
@@ -330,6 +332,16 @@ export const previewResumeController = async (req, res) => {
   try {
     const template = ensureEnum(req.params.template, "template", allowedTemplates);
     const resumeId = sanitizeObjectId(req.params.resumeId, "resumeId");
+
+    const user = await User.findById(req.user.userId);
+    if (!userHasActivePremium(user) && !isFreeBuilderTemplate(template)) {
+      return res.status(403).json({
+        success: false,
+        code: "TEMPLATE_PREMIUM_ONLY",
+        message:
+          "This template is available on Pro. Upgrade to unlock all templates and premium PDF exports.",
+      });
+    }
 
     const resume = await CustomResume.findOne({
       _id: resumeId,

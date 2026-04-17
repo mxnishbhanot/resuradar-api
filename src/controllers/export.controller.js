@@ -1,6 +1,8 @@
 import CustomResume from "../models/CustomResume.js";
+import User from "../models/User.js";
 import { exportResumeService } from "../services/export.service.js";
 import { ensureEnum, sanitizeObjectId } from "../utils/validation.js";
+import { userHasActivePremium, isFreeBuilderTemplate } from "../services/subscriptionAccess.js";
 
 const allowedTemplates = ["modern", "corporate", "minimal", "faang", "luxury", "magazine", "executive", "creative"];
 
@@ -8,6 +10,16 @@ export const exportResumeController = async (req, res) => {
   try {
     const resumeId = sanitizeObjectId(req.query.resumeId, "resumeId");
     const template = ensureEnum(req.query.template, "template", allowedTemplates);
+
+    const user = await User.findById(req.user.userId);
+    if (!userHasActivePremium(user) && !isFreeBuilderTemplate(template)) {
+      return res.status(403).json({
+        success: false,
+        code: "TEMPLATE_PREMIUM_ONLY",
+        message:
+          "This template is available on Pro. Upgrade to unlock all templates and premium PDF exports.",
+      });
+    }
 
     const resume = await CustomResume.findOne({ _id: resumeId, userId: req.user.userId });
     if (!resume) {

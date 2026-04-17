@@ -3,6 +3,7 @@ import cors from "cors";
 import morgan from "morgan";
 import dotenv from "dotenv";
 import routes from "./routes/routes.js";
+import phonepeWebhookRoutes from "./routes/phonepeWebhookRoutes.js";
 import { requestContextMiddleware } from "./middlewares/requestContextMiddleware.js";
 import { securityHeadersMiddleware } from "./middlewares/securityHeadersMiddleware.js";
 import { HttpError } from "./utils/httpError.js";
@@ -44,6 +45,26 @@ app.options("{*path}", cors(corsOptions));
 
 app.use(requestContextMiddleware);
 app.use(securityHeadersMiddleware);
+
+app.use(
+  "/api/webhooks/phonepe",
+  express.raw({ type: "application/json" }),
+  (req, res, next) => {
+    try {
+      const buf = req.body;
+      if (Buffer.isBuffer(buf) && buf.length) {
+        req.body = JSON.parse(buf.toString("utf8"));
+      } else {
+        req.body = {};
+      }
+    } catch {
+      req.body = {};
+    }
+    next();
+  },
+  phonepeWebhookRoutes
+);
+
 app.use(express.json({ limit: "1mb" }));
 app.use(express.urlencoded({ extended: false, limit: "1mb" }));
 app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));

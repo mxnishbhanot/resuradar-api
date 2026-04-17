@@ -5,29 +5,54 @@ import { generateAuthToken } from "../services/phonepe.js";
 import { ensureEnum, ensureString } from "../utils/validation.js";
 import { logger } from "../utils/logger.js";
 
+const buildMerchantSubscriptionId = (userId) => {
+  const base = `MSUB_${String(userId).slice(-8)}_${Date.now().toString(36)}`;
+  return base.length <= 63 ? base : base.slice(0, 63);
+};
+
+const subscriptionMandateExpireMs = () => Date.now() + 30 * 365 * 24 * 60 * 60 * 1000;
+
 export const initiatePayment = async (req, res) => {
   try {
     const planId = ensureEnum(req.body?.planId, "planId", [config.premiumPlanId]);
-    const orderId = ensureString(req.body?.orderId, "orderId", { max: 120 });
-    const amount = config.premiumPlanAmountInr;
+    const orderId = ensureString(req.body?.orderId, "orderId", { max: 63 });
+    const amountPaisa = config.premiumSetupAmountPaisa;
+    const merchantSubscriptionId = buildMerchantSubscriptionId(req.user.userId);
 
-    const accessToken = await generateAuthToken(config);
+    const accessToken = await generateAuthToken();
     if (!accessToken) {
       throw new Error("Failed to generate PhonePe auth token");
     }
 
+    if (!config.phonepeBase) {
+      throw new Error("PHONEPE_BASE is not configured");
+    }
+
     const payload = {
       merchantOrderId: orderId,
-      amount: amount * 100,
+      amount: amountPaisa,
       paymentFlow: {
-        type: "PG_CHECKOUT",
+        type: "SUBSCRIPTION_CHECKOUT_SETUP",
         merchantUrls: {
           redirectUrl: config.redirectUrl,
+        },
+        subscriptionDetails: {
+          subscriptionType: "RECURRING",
+          merchantSubscriptionId,
+          authWorkflowType: "TRANSACTION",
+          amountType: "FIXED",
+          maxAmount: amountPaisa,
+          frequency: "MONTHLY",
+          productType: "UPI_MANDATE",
+          expireAt: subscriptionMandateExpireMs(),
         },
       },
       metaInfo: {
         initiatedAt: new Date().toISOString(),
         source: "resuradar",
+        udf1: String(req.user.userId),
+        udf2: merchantSubscriptionId,
+        udf3: planId,
       },
     };
 
@@ -47,16 +72,26 @@ export const initiatePayment = async (req, res) => {
     await Order.create({
       userId: req.user.userId,
       orderId,
-      amount,
+      amount: Math.round(amountPaisa / 100),
       currency: "INR",
       paymentStatus: "PENDING",
       phonepeResponse: phonepeRes.data,
+      kind: "subscription_setup",
+      merchantSubscriptionId,
     });
 
     return res.status(200).json({
       success: true,
       tokenUrl: redirectUrl,
-      order: { orderId, planId, amount, currency: "INR" },
+      order: {
+        orderId,
+        planId,
+        amountInr: Math.round(amountPaisa / 100),
+        amountPaisa,
+        currency: "INR",
+        merchantSubscriptionId,
+        priceDisplay: `₹${config.premiumPlanAmountInr} ${config.gstDisplayNote}`.trim(),
+      },
     });
   } catch (error) {
     logger.error("initiatePayment error", {

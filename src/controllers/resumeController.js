@@ -10,6 +10,12 @@ import {
 } from "../services/aiService.js";
 import { ensureString } from "../utils/validation.js";
 import { logger } from "../utils/logger.js";
+import {
+  userHasActivePremium,
+  getFreeStandardAnalysisLimit,
+  getFreeJdMatchLimit,
+  getStandardAnalysesBeforeWow,
+} from "../services/subscriptionAccess.js";
 
 const removeTempFile = async (filePath) => {
   if (!filePath) return;
@@ -20,24 +26,56 @@ const removeTempFile = async (filePath) => {
   }
 };
 
-const ensureUserCanUpload = async (userId, filePath) => {
+const checkStandardAnalysisQuota = async (userId, filePath) => {
   const user = await User.findById(userId);
   if (!user) {
     await removeTempFile(filePath);
-    return { allowed: false, status: 404, message: "User not found" };
+    return { allowed: false, status: 404, message: "User not found", code: "USER_NOT_FOUND" };
   }
-
-  const resumeCount = await Resume.countDocuments({ userId });
-  if (!user.isPremium && resumeCount >= 3) {
+  const isPro = userHasActivePremium(user);
+  if (isPro) {
+    return { allowed: true, user, isPro: true };
+  }
+  const standardCount = await Resume.countDocuments({ userId, type: "standard" });
+  const limit = getFreeStandardAnalysisLimit();
+  if (standardCount >= limit) {
     await removeTempFile(filePath);
     return {
       allowed: false,
       status: 403,
-      message: "You have reached your free upload limit (3 resumes). Upgrade to premium to upload more.",
+      code: "FREE_ANALYSIS_LIMIT",
+      message:
+        "You've used your free resume analyses. Upgrade to unlock unlimited insights and match your resume with job descriptions.",
+      limits: { standardUsed: standardCount, standardLimit: limit },
     };
   }
+  return { allowed: true, user, isPro: false, standardCount };
+};
 
-  return { allowed: true, user };
+const checkJdMatchQuota = async (userId, filePath) => {
+  const user = await User.findById(userId);
+  if (!user) {
+    await removeTempFile(filePath);
+    return { allowed: false, status: 404, message: "User not found", code: "USER_NOT_FOUND" };
+  }
+  const isPro = userHasActivePremium(user);
+  if (isPro) {
+    return { allowed: true, user, isPro: true };
+  }
+  const jdCount = await Resume.countDocuments({ userId, type: "job_match" });
+  const limit = getFreeJdMatchLimit();
+  if (jdCount >= limit) {
+    await removeTempFile(filePath);
+    return {
+      allowed: false,
+      status: 403,
+      code: "FREE_JD_MATCH_LIMIT",
+      message:
+        "You've used your free job match trial. Upgrade for unlimited resume-to-job-description matching and full premium insights.",
+      limits: { jdUsed: jdCount, jdLimit: limit },
+    };
+  }
+  return { allowed: true, user, isPro: false, jdCount };
 };
 
 export const uploadResume = async (req, res) => {
@@ -48,10 +86,23 @@ export const uploadResume = async (req, res) => {
 
     const userId = req.user.userId;
     const filePath = req.file.path;
-    const uploadCheck = await ensureUserCanUpload(userId, filePath);
+    const uploadCheck = await checkStandardAnalysisQuota(userId, filePath);
     if (!uploadCheck.allowed) {
-      return res.status(uploadCheck.status).json({ success: false, message: uploadCheck.message });
+      return res.status(uploadCheck.status).json({
+        success: false,
+        code: uploadCheck.code,
+        message: uploadCheck.message,
+        ...(uploadCheck.limits ? { limits: uploadCheck.limits } : {}),
+      });
     }
+
+    const { user, isPro, standardCount } = uploadCheck;
+    const wowAt = getStandardAnalysesBeforeWow();
+    const isWow =
+      !isPro &&
+      !user.premiumWowStandardUsed &&
+      typeof standardCount === "number" &&
+      standardCount === wowAt;
 
     const text = await extractText(filePath, req.file.mimetype);
     const analysis = await analyzeResume(text);
@@ -65,17 +116,26 @@ export const uploadResume = async (req, res) => {
       type: "standard",
     });
 
+    if (isWow) {
+      await User.findByIdAndUpdate(userId, { $set: { premiumWowStandardUsed: true } });
+    }
+
     await removeTempFile(filePath);
+
+    const includePremium = isPro || isWow;
+    const payload = {
+      filename: resume.filename,
+      score: analysis.score,
+      free_feedback: analysis.free_feedback,
+    };
+    if (includePremium) {
+      payload.premium_feedback = analysis.premium_feedback;
+    }
 
     return res.status(200).json({
       success: true,
       message: "Resume analyzed successfully",
-      data: {
-        filename: resume.filename,
-        score: analysis.score,
-        free_feedback: analysis.free_feedback,
-        premium_feedback: analysis.premium_feedback,
-      },
+      data: payload,
     });
   } catch (err) {
     await removeTempFile(req.file?.path);
@@ -129,11 +189,17 @@ export const matchResumeToJob = async (req, res) => {
 
     const userId = req.user.userId;
     const filePath = req.file.path;
-    const uploadCheck = await ensureUserCanUpload(userId, filePath);
+    const uploadCheck = await checkJdMatchQuota(userId, filePath);
     if (!uploadCheck.allowed) {
-      return res.status(uploadCheck.status).json({ success: false, message: uploadCheck.message });
+      return res.status(uploadCheck.status).json({
+        success: false,
+        code: uploadCheck.code,
+        message: uploadCheck.message,
+        ...(uploadCheck.limits ? { limits: uploadCheck.limits } : {}),
+      });
     }
 
+    const { isPro, jdCount } = uploadCheck;
     const text = await extractText(filePath, req.file.mimetype);
     const analysis = await analyzeResumeToJob(text, jobDescription);
 
@@ -148,15 +214,20 @@ export const matchResumeToJob = async (req, res) => {
 
     await removeTempFile(filePath);
 
+    const includePremium = isPro || (!isPro && jdCount === 0);
+    const payload = {
+      filename: resume.filename,
+      score: resume.score,
+      free_feedback: analysis.free_feedback,
+    };
+    if (includePremium) {
+      payload.premium_feedback = analysis.premium_feedback;
+    }
+
     return res.status(200).json({
       success: true,
       message: "Resume analyzed successfully",
-      data: {
-        filename: resume.filename,
-        score: resume.score,
-        free_feedback: analysis.free_feedback,
-        premium_feedback: analysis.premium_feedback,
-      },
+      data: payload,
     });
   } catch (err) {
     await removeTempFile(req.file?.path);
