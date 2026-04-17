@@ -43,7 +43,7 @@ export const config = {
   standardAnalysesBeforeWow: Number(process.env.STANDARD_ANALYSES_BEFORE_WOW || "1"),
   subscriptionPeriodDays: Number(process.env.SUBSCRIPTION_PERIOD_DAYS || "30"),
 
-  freeBuilderTemplates: csvList(process.env.FREE_BUILDER_TEMPLATES, "modern,minimal,corporate"),
+  freeBuilderTemplates: csvList(process.env.FREE_BUILDER_TEMPLATES, "modern,corporate,faang"),
 
   phonepeWebhookUsername: process.env.PHONEPE_WEBHOOK_USERNAME || "",
   phonepeWebhookPassword: process.env.PHONEPE_WEBHOOK_PASSWORD || "",

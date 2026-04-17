@@ -24,7 +24,7 @@
 - `FREE_STANDARD_ANALYSIS_LIMIT` — default `5`.
 - `FREE_JD_MATCH_LIMIT` — default `1`.
 - `STANDARD_ANALYSES_BEFORE_WOW` — 0-based index before next run becomes “wow”; default `1` (second analysis shows premium once).
-- `FREE_BUILDER_TEMPLATES` — comma-separated slugs, default `modern,minimal,corporate`.
+- `FREE_BUILDER_TEMPLATES` — comma-separated slugs, default `modern,corporate,faang`.
 
 ## Subscription window
 

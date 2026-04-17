@@ -4,7 +4,7 @@ import { exportResumeService } from "../services/export.service.js";
 import { ensureEnum, sanitizeObjectId } from "../utils/validation.js";
 import { userHasActivePremium, isFreeBuilderTemplate } from "../services/subscriptionAccess.js";
 
-const allowedTemplates = ["modern", "corporate", "minimal", "faang", "luxury", "magazine", "executive", "creative"];
+const allowedTemplates = ["modern", "corporate", "faang", "luxury", "executive"];
 
 export const exportResumeController = async (req, res) => {
   try {

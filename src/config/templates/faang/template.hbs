@@ -1,460 +1,214 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{personal.firstName}} {{personal.lastName}} - Resume</title>
-    <style>
-        /* ============================================
-           APPLE-LIKE CLEAN RESUME TEMPLATE
-           ATS-Optimized | Professional | Minimal
-           ============================================ */
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-            font-size: 10.5pt;
-            line-height: 1.5;
-            color: #1d1d1f;
-            background: #ffffff;
-            max-width: 8.5in;
-            margin: 0 auto;
-            padding: 0.5in 0.6in;
-        }
-
-        /* ============================================
-           TYPOGRAPHY HIERARCHY
-           ============================================ */
-
-        .resume-header {
-            text-align: center;
-            margin-bottom: 32px;
-            padding-bottom: 24px;
-            border-bottom: 1px solid #d2d2d7;
-        }
-
-        .name {
-            font-size: 32pt;
-            font-weight: 600;
-            letter-spacing: -0.5px;
-            color: #1d1d1f;
-            margin-bottom: 6px;
-        }
-
-        .headline {
-            font-size: 12pt;
-            font-weight: 400;
-            color: #6e6e73;
-            margin-bottom: 12px;
-        }
-
-        .contact-info {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 16px;
-            font-size: 9.5pt;
-            color: #6e6e73;
-        }
-
-        .contact-info a {
-            color: #0071e3;
-            text-decoration: none;
-        }
-
-        .contact-info a:hover {
-            text-decoration: underline;
-        }
-
-        .contact-separator {
-            color: #d2d2d7;
-        }
-
-        /* ============================================
-           SUMMARY SECTION
-           ============================================ */
-
-        .summary {
-            margin-bottom: 28px;
-            line-height: 1.6;
-            color: #1d1d1f;
-            text-align: left;
-        }
-
-        /* ============================================
-           SECTION STYLING
-           ============================================ */
-
-        .section {
-            margin-bottom: 28px;
-        }
-
-        .section-title {
-            font-size: 14pt;
-            font-weight: 600;
-            letter-spacing: -0.3px;
-            color: #1d1d1f;
-            margin-bottom: 16px;
-            text-transform: uppercase;
-            font-size: 11pt;
-            letter-spacing: 0.5px;
-        }
-
-        /* ============================================
-           EXPERIENCE & EDUCATION BLOCKS
-           ============================================ */
-
-        .entry {
-            margin-bottom: 20px;
-            page-break-inside: avoid;
-        }
-
-        .entry:last-child {
-            margin-bottom: 0;
-        }
-
-        .entry-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 4px;
-        }
-
-        .entry-title {
-            font-size: 11pt;
-            font-weight: 600;
-            color: #1d1d1f;
-        }
-
-        .entry-date {
-            font-size: 9.5pt;
-            color: #6e6e73;
-            white-space: nowrap;
-        }
-
-        .entry-subtitle {
-            font-size: 10pt;
-            color: #6e6e73;
-            margin-bottom: 8px;
-        }
-
-        .entry-location {
-            font-size: 9.5pt;
-            color: #86868b;
-            font-style: italic;
-        }
-
-        /* ============================================
-           BULLET POINTS
-           ============================================ */
-
-        .bullets {
-            list-style: none;
-            margin-top: 8px;
-        }
-
-        .bullets li {
-            position: relative;
-            padding-left: 18px;
-            margin-bottom: 6px;
-            line-height: 1.5;
-        }
-
-        .bullets li:before {
-            content: "•";
-            position: absolute;
-            left: 0;
-            color: #6e6e73;
-            font-weight: 600;
-        }
-
-        /* ============================================
-           SKILLS SECTION
-           ============================================ */
-
-        .skills-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-        }
-
-        .skill-category {
-            margin-bottom: 12px;
-        }
-
-        .skill-category-name {
-            font-size: 10pt;
-            font-weight: 600;
-            color: #1d1d1f;
-            margin-bottom: 6px;
-        }
-
-        .skill-list {
-            font-size: 9.5pt;
-            color: #6e6e73;
-            line-height: 1.6;
-        }
-
-        /* ============================================
-           PROJECTS SECTION
-           ============================================ */
-
-        .project-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-            margin-bottom: 4px;
-        }
-
-        .project-title {
-            font-size: 11pt;
-            font-weight: 600;
-            color: #1d1d1f;
-        }
-
-        .project-link {
-            font-size: 9.5pt;
-            color: #0071e3;
-            text-decoration: none;
-        }
-
-        .project-link:hover {
-            text-decoration: underline;
-        }
-
-        .project-meta {
-            font-size: 9.5pt;
-            color: #6e6e73;
-            margin-bottom: 6px;
-        }
-
-        .tech-stack {
-            font-size: 9.5pt;
-            color: #86868b;
-            margin-top: 6px;
-            font-style: italic;
-        }
-
-        /* ============================================
-           EDUCATION GPA
-           ============================================ */
-
-        .education-details {
-            display: flex;
-            justify-content: space-between;
-            align-items: baseline;
-        }
-
-        .gpa {
-            font-size: 9.5pt;
-            color: #6e6e73;
-            white-space: nowrap;
-        }
-
-        /* ============================================
-           PRINT OPTIMIZATION
-           ============================================ */
-
-        @media print {
-            body {
-                padding: 0.4in 0.5in;
-            }
-
-            .section {
-                page-break-inside: avoid;
-            }
-
-            .entry {
-                page-break-inside: avoid;
-            }
-        }
-
-        /* ============================================
-           UTILITY CLASSES
-           ============================================ */
-
-        .text-muted {
-            color: #6e6e73;
-        }
-
-        .text-light {
-            color: #86868b;
-        }
-
-        .mb-small {
-            margin-bottom: 12px;
-        }
-
-        .mb-medium {
-            margin-bottom: 20px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>{{personal.firstName}} {{personal.lastName}}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    @page { margin: 0; size: A4; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      font-size: 9.5pt;
+      line-height: 1.42;
+      color: #111827;
+      background: #fff;
+      padding: 9mm 12mm;
+      max-width: 210mm;
+      margin: 0 auto;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+    .bar {
+      height: 4pt;
+      background: #111827;
+      margin: -9mm -12mm 10mm -12mm;
+      width: calc(100% + 24mm);
+    }
+    .header { margin-bottom: 12pt; }
+    .name {
+      font-size: 20pt;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: #111827;
+    }
+    .headline { font-size: 10pt; font-weight: 500; color: #4b5563; margin-top: 3pt; }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4pt 12pt;
+      margin-top: 8pt;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8.25pt;
+      color: #6b7280;
+    }
+    .section { margin-bottom: 12pt; page-break-inside: avoid; }
+    .section-title {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8pt;
+      font-weight: 500;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: #fff;
+      background: #111827;
+      display: inline-block;
+      padding: 3pt 8pt;
+      margin-bottom: 8pt;
+    }
+    .summary { font-size: 9.5pt; color: #374151; line-height: 1.5; }
+    .entry {
+      margin-bottom: 10pt;
+      padding-left: 10pt;
+      border-left: 2pt solid #e5e7eb;
+      page-break-inside: avoid;
+    }
+    .row { display: flex; justify-content: space-between; gap: 12pt; align-items: flex-start; }
+    .role { font-size: 10.25pt; font-weight: 700; color: #111827; }
+    .co { font-size: 9.25pt; font-weight: 600; color: #374151; margin-top: 1pt; }
+    .sub { font-size: 8.5pt; color: #6b7280; margin-top: 2pt; }
+    .dates {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8pt;
+      font-weight: 500;
+      color: #111827;
+      background: #f3f4f6;
+      padding: 3pt 6pt;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    ul.bullets { margin: 5pt 0 0 12pt; padding: 0; }
+    ul.bullets li { margin-bottom: 3pt; font-size: 9pt; color: #374151; line-height: 1.45; }
+    .skills {
+      display: grid;
+      grid-template-columns: 140pt 1fr;
+      gap: 6pt 10pt;
+      font-size: 9pt;
+    }
+    .skills .k {
+      font-weight: 700;
+      color: #111827;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 8pt;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .skills .v { color: #4b5563; }
+    .tech { font-family: 'IBM Plex Mono', monospace; font-size: 7.75pt; color: #6b7280; margin-top: 4pt; }
+    a { color: #111827; font-weight: 600; }
+  </style>
 </head>
 <body>
-    <!-- ============================================
-         HEADER SECTION
-         ============================================ -->
-    <header class="resume-header">
-        <h1 class="name">{{personal.firstName}} {{personal.lastName}}</h1>
-        {{#if personal.headline}}
-        <p class="headline">{{personal.headline}}</p>
-        {{/if}}
-        <div class="contact-info">
-            {{#if personal.email}}
-            <span><a href="mailto:{{personal.email}}">{{personal.email}}</a></span>
-            {{/if}}
-            {{#if personal.phone}}
-            <span class="contact-separator">•</span>
-            <span>{{personal.phone}}</span>
-            {{/if}}
-            {{#if personal.location}}
-            <span class="contact-separator">•</span>
-            <span>{{personal.location}}</span>
-            {{/if}}
-            {{#if personal.linkedin}}
-            <span class="contact-separator">•</span>
-            <span><a href="{{personal.linkedin}}" target="_blank">LinkedIn</a></span>
-            {{/if}}
-            {{#if personal.github}}
-            <span class="contact-separator">•</span>
-            <span><a href="{{personal.github}}" target="_blank">GitHub</a></span>
-            {{/if}}
-        </div>
-    </header>
+  <div class="bar"></div>
 
-    <!-- ============================================
-         SUMMARY SECTION
-         ============================================ -->
-    {{#if personal.summary}}
-    <section class="summary">
-        {{personal.summary}}
-    </section>
-    {{/if}}
+  <header class="header">
+    <div class="name">{{personal.firstName}} {{personal.lastName}}</div>
+    {{#if personal.headline}}<div class="headline">{{personal.headline}}</div>{{/if}}
+    <div class="meta">
+      {{#if personal.email}}<span>{{personal.email}}</span>{{/if}}
+      {{#if personal.phone}}<span>{{personal.phone}}</span>{{/if}}
+      {{#if personal.location}}<span>{{personal.location}}</span>{{/if}}
+    </div>
+  </header>
 
-    <!-- ============================================
-         EXPERIENCE SECTION
-         ============================================ -->
-    {{#if experiences.length}}
-    <section class="section">
-        <h2 class="section-title">Experience</h2>
-        {{#each experiences}}
-        <div class="entry">
-            <div class="entry-header">
-                <h3 class="entry-title">{{this.title}}</h3>
-                <span class="entry-date">
-                    {{formatDate this.startDate}}{{#if this.isCurrent}} - Present{{else}}{{#if this.endDate}} - {{formatDate this.endDate}}{{/if}}{{/if}}
-                </span>
-            </div>
-            <div class="entry-subtitle">
-                {{#if this.company}}{{this.company}}{{/if}}
-                {{#if this.location}}<span class="entry-location"> • {{this.location}}</span>{{/if}}
-            </div>
-            {{#if this.bullets}}
-            <ul class="bullets">
-                {{#each this.bullets}}
-                <li>{{this}}</li>
-                {{/each}}
-            </ul>
-            {{/if}}
-        </div>
-        {{/each}}
-    </section>
-    {{/if}}
+  {{#if personal.summary}}
+  <section class="section">
+    <div class="section-title">Summary</div>
+    <div class="summary">{{personal.summary}}</div>
+  </section>
+  {{/if}}
 
-    <!-- ============================================
-         EDUCATION SECTION
-         ============================================ -->
-    {{#if educations.length}}
-    <section class="section">
-        <h2 class="section-title">Education</h2>
-        {{#each educations}}
-        <div class="entry">
-            <div class="entry-header">
-                <h3 class="entry-title">{{this.institution}}</h3>
-                <span class="entry-date">
-                    {{formatDate this.startDate}}{{#if this.isCurrent}} - Present{{else}}{{#if this.endDate}} - {{formatDate this.endDate}}{{/if}}{{/if}}
-                </span>
-            </div>
-            <div class="education-details">
-                <div class="entry-subtitle">
-                    {{this.degree}} in {{this.major}}
-                </div>
-                {{#if this.gpa}}
-                <span class="gpa">GPA: {{this.gpa}}</span>
-                {{/if}}
-            </div>
-            {{#if this.bullets}}
-            <ul class="bullets">
-                {{#each this.bullets}}
-                <li>{{this}}</li>
-                {{/each}}
-            </ul>
-            {{/if}}
+  {{#if experiences.length}}
+  <section class="section">
+    <div class="section-title">Experience</div>
+    {{#each experiences}}
+    <div class="entry">
+      <div class="row">
+        <div>
+          <div class="role">{{title}}</div>
+          {{#if company}}<div class="co">{{company}}</div>{{/if}}
+          {{#if role}}<div class="sub">{{role}}</div>{{/if}}
         </div>
-        {{/each}}
-    </section>
-    {{/if}}
+        <div class="dates">
+          {{#if startDate}}{{formatDate startDate}}{{/if}}
+          {{#if isCurrent}} — now{{else}}{{#if endDate}} — {{formatDate endDate}}{{/if}}{{/if}}
+        </div>
+      </div>
+      {{#if bullets.length}}
+      <ul class="bullets">
+        {{#each bullets}}<li>{{this}}</li>{{/each}}
+      </ul>
+      {{/if}}
+    </div>
+    {{/each}}
+  </section>
+  {{/if}}
 
-    <!-- ============================================
-         PROJECTS SECTION
-         ============================================ -->
-    {{#if projects.length}}
-    <section class="section">
-        <h2 class="section-title">Projects</h2>
-        {{#each projects}}
-        <div class="entry">
-            <div class="project-header">
-                <h3 class="project-title">{{this.title}}</h3>
-                {{#if this.link}}
-                <a href="{{this.link}}" class="project-link" target="_blank">View Project →</a>
-                {{/if}}
-            </div>
-            <div class="project-meta">
-                {{#if this.role}}{{this.role}}{{/if}}
-                {{#if this.startDate}}
-                 • {{formatDate this.startDate}}{{#if this.isCurrent}} - Present{{else}}{{#if this.endDate}} - {{formatDate this.endDate}}{{/if}}{{/if}}
-                {{/if}}
-            </div>
-            {{#if this.bullets}}
-            <ul class="bullets">
-                {{#each this.bullets}}
-                <li>{{this}}</li>
-                {{/each}}
-            </ul>
-            {{/if}}
-            {{#if this.techStack}}
-            <div class="tech-stack">
-                Technologies: {{#each this.techStack}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
-            </div>
-            {{/if}}
+  {{#if educations.length}}
+  <section class="section">
+    <div class="section-title">Education</div>
+    {{#each educations}}
+    <div class="entry">
+      <div class="row">
+        <div>
+          <div class="role">{{institution}}</div>
+          <div class="co">{{degree}}{{#if major}} · {{major}}{{/if}}{{#if gpa}} · GPA {{gpa}}{{/if}}</div>
         </div>
-        {{/each}}
-    </section>
-    {{/if}}
+        <div class="dates">
+          {{#if startDate}}{{formatDate startDate}}{{/if}}
+          {{#if isCurrent}} — now{{else}}{{#if endDate}} — {{formatDate endDate}}{{/if}}{{/if}}
+        </div>
+      </div>
+      {{#if bullets.length}}
+      <ul class="bullets">
+        {{#each bullets}}<li>{{this}}</li>{{/each}}
+      </ul>
+      {{/if}}
+    </div>
+    {{/each}}
+  </section>
+  {{/if}}
 
-    <!-- ============================================
-         SKILLS SECTION
-         ============================================ -->
-    {{#if skills.length}}
-    <section class="section">
-        <h2 class="section-title">Skills</h2>
-        <div class="skills-grid">
-            {{#each skills}}
-            <div class="skill-category">
-                <div class="skill-category-name">{{this.name}}</div>
-                <div class="skill-list">
-                    {{#each this.skills}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}
-                </div>
-            </div>
-            {{/each}}
+  {{#if projects.length}}
+  <section class="section">
+    <div class="section-title">Projects</div>
+    {{#each projects}}
+    <div class="entry">
+      <div class="row">
+        <div>
+          <div class="role">{{title}}{{#if link}} · <a href="{{link}}">link</a>{{/if}}</div>
+          {{#if role}}<div class="sub">{{role}}</div>{{/if}}
         </div>
-    </section>
-    {{/if}}
+        <div class="dates">
+          {{#if startDate}}{{formatDate startDate}}{{/if}}
+          {{#if isCurrent}} — now{{else}}{{#if endDate}} — {{formatDate endDate}}{{/if}}{{/if}}
+        </div>
+      </div>
+      {{#if techStack.length}}
+      <div class="tech">{{#each techStack}}{{this}}{{#unless @last}} · {{/unless}}{{/each}}</div>
+      {{/if}}
+      {{#if bullets.length}}
+      <ul class="bullets">
+        {{#each bullets}}<li>{{this}}</li>{{/each}}
+      </ul>
+      {{/if}}
+    </div>
+    {{/each}}
+  </section>
+  {{/if}}
+
+  {{#if skills.length}}
+  <section class="section">
+    <div class="section-title">Skills</div>
+    <div class="skills">
+      {{#each skills}}
+      <div class="k">{{name}}</div>
+      <div class="v">{{#each skills}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</div>
+      {{/each}}
+    </div>
+  </section>
+  {{/if}}
 
 </body>
 </html>

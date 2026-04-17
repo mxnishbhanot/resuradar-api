@@ -10,7 +10,7 @@ import { normalizeParsedResume } from "../services/resumeNormalizer.js";
 import { ensureEnum, sanitizeObjectId } from "../utils/validation.js";
 import { logger } from "../utils/logger.js";
 
-const allowedTemplates = ["modern", "corporate", "minimal", "faang", "luxury", "magazine", "executive", "creative"];
+const allowedTemplates = ["modern", "corporate", "faang", "luxury", "executive"];
 const removeTempFile = async (filePath) => {
   if (!filePath) return;
   try {
