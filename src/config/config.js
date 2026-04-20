@@ -43,6 +43,7 @@ export const config = {
   standardAnalysesBeforeWow: Number(process.env.STANDARD_ANALYSES_BEFORE_WOW || "1"),
   subscriptionPeriodDays: Number(process.env.SUBSCRIPTION_PERIOD_DAYS || "30"),
 
+  /** Free tier: 3 templates. Pro unlocks the other 2 (luxury, executive) unless overridden. */
   freeBuilderTemplates: csvList(process.env.FREE_BUILDER_TEMPLATES, "modern,corporate,faang"),
 
   phonepeWebhookUsername: process.env.PHONEPE_WEBHOOK_USERNAME || "",

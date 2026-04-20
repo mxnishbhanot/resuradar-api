@@ -17,14 +17,6 @@ export function getPdfMarginCss() {
 }
 
 const DEFAULT_SECTION_ORDER = ["summary", "experience", "education", "projects", "skills"];
-/** Matches legacy modern template: rail first (skills, education), then main column. */
-export const MODERN_DEFAULT_SECTION_ORDER = [
-  "skills",
-  "education",
-  "summary",
-  "experience",
-  "projects",
-];
 
 const ALLOWED_SECTIONS = new Set(DEFAULT_SECTION_ORDER);
 
@@ -32,9 +24,9 @@ const ALLOWED_SECTIONS = new Set(DEFAULT_SECTION_ORDER);
  * @param {string[]} order
  * @param {'modern'|'corporate'|'faang'|'luxury'|'executive'} templateName
  */
-export function normalizeSectionOrder(order, templateName) {
-  const base =
-    templateName === "modern" ? [...MODERN_DEFAULT_SECTION_ORDER] : [...DEFAULT_SECTION_ORDER];
+/** @param {string[]} order @param {string} [_templateName] reserved for per-template defaults */
+export function normalizeSectionOrder(order, _templateName) {
+  const base = [...DEFAULT_SECTION_ORDER];
   if (!Array.isArray(order) || order.length === 0) return base;
   const seen = new Set();
   const out = [];

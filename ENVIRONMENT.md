@@ -24,7 +24,7 @@
 - `FREE_STANDARD_ANALYSIS_LIMIT` — default `3`.
 - `FREE_JD_MATCH_LIMIT` — default `1`.
 - `STANDARD_ANALYSES_BEFORE_WOW` — 0-based index before next run becomes “wow”; default `1` (second analysis shows premium once).
-- `FREE_BUILDER_TEMPLATES` — comma-separated slugs, default `modern,corporate,faang`.
+- `FREE_BUILDER_TEMPLATES` — comma-separated slugs (default `modern,corporate,faang` = **3 free**). Remaining builder templates (`luxury`, `executive`) require Pro unless listed here. Set explicitly for A/B tests (still recommend exactly three free slots to match product: 3 free / 2 Pro).
 
 ## Subscription window
 
