@@ -21,7 +21,9 @@ import {
   fetchAllCustomResumes,
   getCustomResume,
   getCustomResumeDraft,
+  previewHtmlByQueryController,
   previewResumeController,
+  renderPreviewFromBodyController,
   saveCustomResume,
   uploadCustomResume,
 } from "../controllers/customResumeController.js";
@@ -74,10 +76,20 @@ router.delete("/resumes/:id", verifyToken, asyncHandler(deleteResumeHistory));
 router.get("/resumes/:type", verifyToken, asyncHandler(getResumes));
 
 router.get("/custom-resume/pdf", verifyToken, asyncHandler(exportResumeController));
+router.post(
+  "/custom-resume/render-preview",
+  verifyToken,
+  asyncHandler(renderPreviewFromBodyController)
+);
 router.get("/custom-resume/draft", verifyToken, asyncHandler(getCustomResumeDraft));
 router.put("/custom-resume/draft/autosave", verifyToken, asyncHandler(autoSaveCustomResumeDraft));
 router.post("/custom-resume/save", verifyToken, asyncHandler(saveCustomResume));
 router.get("/custom-resume/all", verifyToken, asyncHandler(fetchAllCustomResumes));
+router.get(
+  "/custom-resume/:resumeId/preview-html",
+  verifyToken,
+  asyncHandler(previewHtmlByQueryController)
+);
 router.get("/custom-resume/:template/:resumeId", verifyToken, asyncHandler(previewResumeController));
 router.get("/custom-resume/:id", verifyToken, asyncHandler(getCustomResume));
 router.put("/custom-resume/:id", verifyToken, asyncHandler(saveCustomResume));

@@ -482,7 +482,10 @@ Schema:
     "phone": string,
     "location": string,
     "headline": string,
-    "summary": string
+    "summary": string,
+    "linkedin": string,
+    "github": string,
+    "portfolioUrl": string
   },
   "educations": [
     {

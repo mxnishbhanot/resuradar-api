@@ -15,9 +15,6 @@
       line-height: 1.45;
       color: #0f172a;
       background: #fff;
-      padding: 10mm 14mm;
-      max-width: 210mm;
-      margin: 0 auto;
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
@@ -49,7 +46,7 @@
       font-weight: 500;
     }
     .contact span { white-space: nowrap; }
-    .section { margin-bottom: 13pt; page-break-inside: avoid; }
+    .section { margin-bottom: calc(13pt * var(--rr-section-gap-mul, 1)); page-break-inside: avoid; }
     .section-title {
       font-size: 9.5pt;
       font-weight: 700;
@@ -122,106 +119,117 @@
       {{#if personal.email}}<span>{{personal.email}}</span>{{/if}}
       {{#if personal.phone}}<span>{{personal.phone}}</span>{{/if}}
       {{#if personal.location}}<span>{{personal.location}}</span>{{/if}}
+      {{#if personal.linkedin}}<span><a href="{{hrefUrl personal.linkedin}}">LinkedIn</a></span>{{/if}}
+      {{#if personal.portfolioUrl}}<span><a href="{{hrefUrl personal.portfolioUrl}}">Portfolio</a></span>{{/if}}
+      {{#if personal.github}}<span><a href="{{hrefUrl personal.github}}">GitHub</a></span>{{/if}}
     </div>
   </header>
 
-  {{#if personal.summary}}
-  <section class="section">
-    <div class="section-title">Executive summary</div>
-    <div class="summary">{{personal.summary}}</div>
-  </section>
-  {{/if}}
-
-  {{#if experiences.length}}
-  <section class="section">
-    <div class="section-title">Professional experience</div>
-    {{#each experiences}}
-    <div class="entry">
-      <div class="entry-head">
-        <div>
-          <div class="entry-title">{{title}}{{#if company}} — {{company}}{{/if}}</div>
+  {{#each sectionOrder}}
+    {{#if (eq this "summary")}}
+      {{#if @root.personal.summary}}
+      <section class="section">
+        <div class="section-title">Executive summary</div>
+        <div class="summary" data-rr-field="personal.summary">{{@root.personal.summary}}</div>
+      </section>
+      {{/if}}
+    {{/if}}
+    {{#if (eq this "experience")}}
+      {{#if @root.experiences.length}}
+      <section class="section" data-rr-field="section.experience">
+        <div class="section-title">Professional experience</div>
+        {{#each @root.experiences}}
+        <div class="entry">
+          <div class="entry-head">
+            <div>
+              <div class="entry-title">{{title}}{{#if company}} — {{company}}{{/if}}</div>
+              {{#if role}}<div class="entry-sub">{{role}}</div>{{/if}}
+            </div>
+            <div class="entry-date">
+              {{#if startDate}}{{formatDate startDate}}{{/if}}
+              {{#if isCurrent}} – Present{{else}}{{#if endDate}} – {{formatDate endDate}}{{/if}}{{/if}}
+            </div>
+          </div>
+          {{#if bullets.length}}
+          <ul class="bullets">
+            {{#each bullets}}<li>{{this}}</li>{{/each}}
+          </ul>
+          {{/if}}
+        </div>
+        {{/each}}
+      </section>
+      {{/if}}
+    {{/if}}
+    {{#if (eq this "education")}}
+      {{#if @root.educations.length}}
+      <section class="section" data-rr-field="section.education">
+        <div class="section-title">Education</div>
+        {{#each @root.educations}}
+        <div class="entry">
+          <div class="entry-head">
+            <div>
+              <div class="entry-title">{{degree}}{{#if major}} in {{major}}{{/if}}</div>
+              <div class="entry-sub">{{institution}}{{#if gpa}} · GPA {{gpa}}{{/if}}</div>
+            </div>
+            <div class="entry-date">
+              {{#if startDate}}{{formatDate startDate}}{{/if}}
+              {{#if isCurrent}} – Present{{else}}{{#if endDate}} – {{formatDate endDate}}{{/if}}{{/if}}
+            </div>
+          </div>
+          {{#if bullets.length}}
+          <ul class="bullets">
+            {{#each bullets}}<li>{{this}}</li>{{/each}}
+          </ul>
+          {{/if}}
+        </div>
+        {{/each}}
+      </section>
+      {{/if}}
+    {{/if}}
+    {{#if (eq this "projects")}}
+      {{#if @root.projects.length}}
+      <section class="section" data-rr-field="section.projects">
+        <div class="section-title">Key projects</div>
+        {{#each @root.projects}}
+        <div class="entry">
+          <div class="entry-head">
+            <div class="entry-title">
+              {{title}}
+              {{#if link}}<span style="font-weight:500;font-size:9pt;"> · <a href="{{link}}">Link</a></span>{{/if}}
+            </div>
+            <div class="entry-date">
+              {{#if startDate}}{{formatDate startDate}}{{/if}}
+              {{#if isCurrent}} – Present{{else}}{{#if endDate}} – {{formatDate endDate}}{{/if}}{{/if}}
+            </div>
+          </div>
           {{#if role}}<div class="entry-sub">{{role}}</div>{{/if}}
+          {{#if techStack.length}}<div class="tech">{{#each techStack}}{{this}}{{#unless @last}} · {{/unless}}{{/each}}</div>{{/if}}
+          {{#if bullets.length}}
+          <ul class="bullets">
+            {{#each bullets}}<li>{{this}}</li>{{/each}}
+          </ul>
+          {{/if}}
         </div>
-        <div class="entry-date">
-          {{#if startDate}}{{formatDate startDate}}{{/if}}
-          {{#if isCurrent}} – Present{{else}}{{#if endDate}} – {{formatDate endDate}}{{/if}}{{/if}}
-        </div>
-      </div>
-      {{#if bullets.length}}
-      <ul class="bullets">
-        {{#each bullets}}<li>{{this}}</li>{{/each}}
-      </ul>
+        {{/each}}
+      </section>
       {{/if}}
-    </div>
-    {{/each}}
-  </section>
-  {{/if}}
-
-  {{#if educations.length}}
-  <section class="section">
-    <div class="section-title">Education</div>
-    {{#each educations}}
-    <div class="entry">
-      <div class="entry-head">
-        <div>
-          <div class="entry-title">{{degree}}{{#if major}} in {{major}}{{/if}}</div>
-          <div class="entry-sub">{{institution}}{{#if gpa}} · GPA {{gpa}}{{/if}}</div>
+    {{/if}}
+    {{#if (eq this "skills")}}
+      {{#if @root.skills.length}}
+      <section class="section" data-rr-field="section.skills">
+        <div class="section-title">Core competencies</div>
+        <div class="skills-grid">
+          {{#each @root.skills}}
+          <div class="skill-block">
+            <strong>{{name}}</strong>
+            <span>{{#each skills}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</span>
+          </div>
+          {{/each}}
         </div>
-        <div class="entry-date">
-          {{#if startDate}}{{formatDate startDate}}{{/if}}
-          {{#if isCurrent}} – Present{{else}}{{#if endDate}} – {{formatDate endDate}}{{/if}}{{/if}}
-        </div>
-      </div>
-      {{#if bullets.length}}
-      <ul class="bullets">
-        {{#each bullets}}<li>{{this}}</li>{{/each}}
-      </ul>
+      </section>
       {{/if}}
-    </div>
-    {{/each}}
-  </section>
-  {{/if}}
-
-  {{#if projects.length}}
-  <section class="section">
-    <div class="section-title">Key projects</div>
-    {{#each projects}}
-    <div class="entry">
-      <div class="entry-head">
-        <div class="entry-title">
-          {{title}}
-          {{#if link}}<span style="font-weight:500;font-size:9pt;"> · <a href="{{link}}">Link</a></span>{{/if}}
-        </div>
-        <div class="entry-date">
-          {{#if startDate}}{{formatDate startDate}}{{/if}}
-          {{#if isCurrent}} – Present{{else}}{{#if endDate}} – {{formatDate endDate}}{{/if}}{{/if}}
-        </div>
-      </div>
-      {{#if role}}<div class="entry-sub">{{role}}</div>{{/if}}
-      {{#if techStack.length}}<div class="tech">{{#each techStack}}{{this}}{{#unless @last}} · {{/unless}}{{/each}}</div>{{/if}}
-      {{#if bullets.length}}
-      <ul class="bullets">
-        {{#each bullets}}<li>{{this}}</li>{{/each}}
-      </ul>
-      {{/if}}
-    </div>
-    {{/each}}
-  </section>
-  {{/if}}
-
-  {{#if skills.length}}
-  <section class="section">
-    <div class="section-title">Core competencies</div>
-    <div class="skills-grid">
-      {{#each skills}}
-      <div class="skill-block">
-        <strong>{{name}}</strong>
-        <span>{{#each skills}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</span>
-      </div>
-      {{/each}}
-    </div>
-  </section>
-  {{/if}}
+    {{/if}}
+  {{/each}}
 
 </body>
 </html>

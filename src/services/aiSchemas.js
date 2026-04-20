@@ -123,6 +123,9 @@ const personalSchema = {
     location: { type: Type.STRING },
     headline: { type: Type.STRING },
     summary: { type: Type.STRING },
+    linkedin: { type: Type.STRING },
+    github: { type: Type.STRING },
+    portfolioUrl: { type: Type.STRING },
   },
 };
 

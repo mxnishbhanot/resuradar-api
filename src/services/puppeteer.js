@@ -1,4 +1,5 @@
 import { chromium } from "playwright";
+import { getPdfMarginCss } from "../config/print-spec.js";
 
 export const generatePDF = async (html) => {
   let browser;
@@ -36,16 +37,12 @@ export const generatePDF = async (html) => {
     await page.waitForTimeout(500);
 
     // Generate PDF with proper settings
+    const margin = getPdfMarginCss();
     const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
       preferCSSPageSize: false, // Use A4 format, not CSS @page
-      margin: {
-        top: "12mm",    // Reduced margins for more content
-        bottom: "12mm",
-        left: "12mm",
-        right: "12mm"
-      },
+      margin,
       displayHeaderFooter: false,
       scale: 1.0 // Ensure no scaling
     });

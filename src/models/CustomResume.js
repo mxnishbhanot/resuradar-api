@@ -62,12 +62,37 @@ const customResumeSchema = new mongoose.Schema({
     location: String,
     headline: String,
     summary: String, // Added 'summary' to PersonalInfo
+    linkedin: String,
+    github: String,
+    portfolioUrl: String,
   },
   educations: [educationSchema], // Using new educationSchema
   experiences: [experienceSchema], // Using new experienceSchema
   skills: [skillCategorySchema], // Using new skillCategorySchema
   projects: [projectSchema], // Using new projectSchema
-  
+
+  /** Section order, density, and scale for template builder / PDF */
+  templateSettings: {
+    type: new mongoose.Schema(
+      {
+        sectionOrder: [{ type: String }],
+        layout: {
+          type: new mongoose.Schema(
+            {
+              globalScale: { type: Number },
+              sectionGap: { type: Number },
+              lineHeight: { type: Number },
+            },
+            { _id: false }
+          ),
+          default: undefined,
+        },
+      },
+      { _id: false }
+    ),
+    default: undefined,
+  },
+
   // Custom metadata fields
   isDraft: {
     type: Boolean,

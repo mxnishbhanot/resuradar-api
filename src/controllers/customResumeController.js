@@ -39,7 +39,7 @@ export const getCustomResumeDraft = async (req, res) => {
 
 export const autoSaveCustomResumeDraft = async (req, res) => {
   try {
-    const { personal, educations, experiences, skills, projects } = req.body;
+    const { personal, educations, experiences, skills, projects, templateSettings } = req.body;
     const resumeId = parseOptionalObjectId(req.body._id, "_id");
     let resume;
 
@@ -66,6 +66,7 @@ export const autoSaveCustomResumeDraft = async (req, res) => {
     if (experiences) resume.experiences = experiences;
     if (skills) resume.skills = skills;
     if (projects) resume.projects = projects;
+    if (templateSettings !== undefined) resume.templateSettings = templateSettings;
 
     resume.isDraft = true;
     resume.lastAutoSaveAt = new Date();
@@ -92,7 +93,8 @@ export const autoSaveCustomResumeDraft = async (req, res) => {
 
 export const saveCustomResume = async (req, res) => {
   try {
-    const { _id, personal, educations, experiences, skills, projects, isDraft } = req.body;
+    const { _id, personal, educations, experiences, skills, projects, isDraft, templateSettings } =
+      req.body;
     let resume;
 
     if (_id) {
@@ -110,6 +112,7 @@ export const saveCustomResume = async (req, res) => {
     resume.skills = skills || [];
     resume.projects = projects || [];
     resume.isDraft = isDraft !== undefined ? isDraft : false;
+    if (templateSettings !== undefined) resume.templateSettings = templateSettings;
 
     resume.calculateCompletion();
     await resume.save();
@@ -171,13 +174,15 @@ export const updateCustomResume = async (req, res) => {
       return res.status(404).json({ error: "Resume not found" });
     }
 
-    const { personal, educations, experiences, skills, projects, isDraft } = req.body;
+    const { personal, educations, experiences, skills, projects, isDraft, templateSettings } =
+      req.body;
     if (personal) resume.personal = personal;
     if (educations) resume.educations = educations;
     if (experiences) resume.experiences = experiences;
     if (skills) resume.skills = skills;
     if (projects) resume.projects = projects;
     if (isDraft !== undefined) resume.isDraft = isDraft;
+    if (templateSettings !== undefined) resume.templateSettings = templateSettings;
 
     resume.calculateCompletion();
     await resume.save();
@@ -234,6 +239,7 @@ export const duplicateCustomResume = async (req, res) => {
       experiences: original.experiences,
       skills: original.skills,
       projects: original.projects,
+      templateSettings: original.templateSettings,
       isDraft: true,
     });
 
@@ -356,6 +362,72 @@ export const uploadCustomResume = async (req, res) => {
   }
 };
 
+/** POST body: { resume, template } — render HTML from in-memory resume (designer / auto-adjust). */
+export const renderPreviewFromBodyController = async (req, res) => {
+  try {
+    const template = ensureEnum(req.body.template, "template", allowedTemplates);
+    const resume = req.body.resume;
+    if (!resume || typeof resume !== "object") {
+      return res.status(400).json({ message: "resume object is required" });
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!userHasActivePremium(user) && !isFreeBuilderTemplate(template)) {
+      return res.status(403).json({
+        success: false,
+        code: "TEMPLATE_PREMIUM_ONLY",
+        message:
+          "This template is available on Pro. Upgrade to unlock all templates and premium PDF exports.",
+      });
+    }
+
+    const html = renderTemplateHTML(resume, template);
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.set("X-Content-Type-Options", "nosniff");
+    return res.send(html);
+  } catch (err) {
+    logger.error("Render preview body error", { message: err.message, requestId: req.requestId });
+    return res.status(500).json({ message: "Failed to render preview" });
+  }
+};
+
+/** GET /custom-resume/:resumeId/preview-html?template=modern */
+export const previewHtmlByQueryController = async (req, res) => {
+  try {
+    const resumeId = sanitizeObjectId(req.params.resumeId, "resumeId");
+    const template = ensureEnum(req.query.template, "template", allowedTemplates);
+
+    const user = await User.findById(req.user.userId);
+    if (!userHasActivePremium(user) && !isFreeBuilderTemplate(template)) {
+      return res.status(403).json({
+        success: false,
+        code: "TEMPLATE_PREMIUM_ONLY",
+        message:
+          "This template is available on Pro. Upgrade to unlock all templates and premium PDF exports.",
+      });
+    }
+
+    const resume = await CustomResume.findOne({
+      _id: resumeId,
+      userId: req.user.userId,
+    });
+
+    if (!resume) {
+      return res.status(404).json({ message: "Resume not found" });
+    }
+
+    const cleanData = JSON.parse(JSON.stringify(resume));
+    const html = renderTemplateHTML(cleanData, template);
+
+    res.set("Content-Type", "text/html; charset=utf-8");
+    res.set("X-Content-Type-Options", "nosniff");
+    return res.send(html);
+  } catch (err) {
+    logger.error("Preview HTML error", { message: err.message, requestId: req.requestId });
+    return res.status(500).json({ message: "Failed to generate preview HTML" });
+  }
+};
+
 export const previewResumeController = async (req, res) => {
   try {
     const template = ensureEnum(req.params.template, "template", allowedTemplates);
@@ -381,7 +453,7 @@ export const previewResumeController = async (req, res) => {
     }
 
     const cleanData = JSON.parse(JSON.stringify(resume));
-    const html = await renderTemplateHTML(cleanData, template);
+    const html = renderTemplateHTML(cleanData, template);
 
     res.set("Content-Type", "text/html");
     return res.send(html);

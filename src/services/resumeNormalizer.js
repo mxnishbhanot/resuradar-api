@@ -25,6 +25,9 @@ const normalizePersonal = (personal = {}) => ({
   location: personal.location || "",
   headline: personal.headline || "",
   summary: personal.summary || "",
+  linkedin: personal.linkedin || "",
+  github: personal.github || "",
+  portfolioUrl: personal.portfolioUrl || personal.portfolio || personal.website || "",
 });
 
 export const normalizeParsedResume = (parsed = {}) => {
