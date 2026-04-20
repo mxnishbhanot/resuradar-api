@@ -44,7 +44,14 @@ export const ensureObject = (value, field) => {
 export const sanitizeObjectId = (value, field = "id") => {
   const normalized = ensureString(value, field, { max: 100 });
   if (!/^[a-fA-F0-9]{24}$/.test(normalized)) {
-    throw new HttpError(400, `${field} must be a valid identifier`);
+    throw new HttpError(400, `${field} must be a valid identifier`, { code: "INVALID_RESUME_ID" });
   }
   return normalized;
+};
+
+/** Returns null if absent; throws HttpError(400) if present but not a valid ObjectId string. */
+export const parseOptionalObjectId = (value, field = "resumeId") => {
+  if (value === undefined || value === null || value === "") return null;
+  const str = typeof value === "string" ? value : String(value);
+  return sanitizeObjectId(str, field);
 };

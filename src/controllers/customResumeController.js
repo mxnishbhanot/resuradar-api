@@ -7,8 +7,9 @@ import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 import { renderTemplateHTML } from "../services/template-engine.js";
 import { normalizeParsedResume } from "../services/resumeNormalizer.js";
-import { ensureEnum, sanitizeObjectId } from "../utils/validation.js";
+import { ensureEnum, sanitizeObjectId, parseOptionalObjectId } from "../utils/validation.js";
 import { logger } from "../utils/logger.js";
+import { HttpError } from "../utils/httpError.js";
 
 const allowedTemplates = ["modern", "corporate", "faang", "luxury", "executive"];
 const removeTempFile = async (filePath) => {
@@ -38,18 +39,19 @@ export const getCustomResumeDraft = async (req, res) => {
 
 export const autoSaveCustomResumeDraft = async (req, res) => {
   try {
-    const { _id, personal, educations, experiences, skills, projects } = req.body;
+    const { personal, educations, experiences, skills, projects } = req.body;
+    const resumeId = parseOptionalObjectId(req.body._id, "_id");
     let resume;
 
-    if (_id) {
+    if (resumeId) {
       resume = await CustomResume.findOne({
-        _id,
+        _id: resumeId,
         userId: req.user.userId,
       });
 
       if (!resume) {
         logger.warn("Draft id missing, creating a new draft", {
-          resumeId: _id,
+          resumeId,
           userId: req.user.userId,
           requestId: req.requestId,
         });
@@ -76,7 +78,14 @@ export const autoSaveCustomResumeDraft = async (req, res) => {
       savedAt: resume.lastAutoSaveAt,
     });
   } catch (error) {
-    logger.error("Auto-save error", { message: error.message, requestId: req.requestId });
+    if (error instanceof HttpError) throw error;
+    logger.error("Auto-save error", {
+      message: error.message,
+      name: error.name,
+      requestId: req.requestId,
+      userId: req.user?.userId,
+      resumeId: req.body?._id,
+    });
     res.status(500).json({ error: "Failed to auto-save draft" });
   }
 };
@@ -110,7 +119,12 @@ export const saveCustomResume = async (req, res) => {
       resume,
     });
   } catch (error) {
-    logger.error("Save error", { message: error.message, requestId: req.requestId });
+    logger.error("Save error", {
+      message: error.message,
+      name: error.name,
+      requestId: req.requestId,
+      userId: req.user?.userId,
+    });
     res.status(500).json({ error: "Failed to save resume" });
   }
 };
@@ -173,7 +187,13 @@ export const updateCustomResume = async (req, res) => {
       resume,
     });
   } catch (error) {
-    logger.error("Update resume error", { message: error.message, requestId: req.requestId });
+    logger.error("Update resume error", {
+      message: error.message,
+      name: error.name,
+      requestId: req.requestId,
+      userId: req.user?.userId,
+      resumeId: req.params?.id,
+    });
     res.status(500).json({ error: "Failed to update resume" });
   }
 };
@@ -232,8 +252,9 @@ export const duplicateCustomResume = async (req, res) => {
 
 export const completeCustomResume = async (req, res) => {
   try {
+    const resumeId = sanitizeObjectId(req.params.id, "resumeId");
     const resume = await CustomResume.findOne({
-      _id: req.params.id,
+      _id: resumeId,
       userId: req.user.userId,
     });
 
@@ -250,7 +271,14 @@ export const completeCustomResume = async (req, res) => {
       resume,
     });
   } catch (error) {
-    logger.error("Complete resume error", { message: error.message, requestId: req.requestId });
+    if (error instanceof HttpError) throw error;
+    logger.error("Complete resume error", {
+      message: error.message,
+      name: error.name,
+      requestId: req.requestId,
+      userId: req.user?.userId,
+      resumeId: req.params?.id,
+    });
     res.status(500).json({ error: "Failed to complete resume" });
   }
 };

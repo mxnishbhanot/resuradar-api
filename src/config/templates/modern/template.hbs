@@ -159,7 +159,7 @@
         {{#each educations}}
         <div class="entry">
           <div class="t1">{{degree}}</div>
-          <div class="t2">{{major}}</div>
+          {{#if major}}<div class="t2">{{major}}</div>{{/if}}
           <div class="t3">{{institution}}{{#if gpa}} · {{gpa}}{{/if}}</div>
           <div class="dt" style="margin-top:4pt;display:inline-block;">
             {{#if startDate}}{{formatDate startDate}}{{/if}}

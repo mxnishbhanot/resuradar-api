@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import crypto from "crypto";
 
 // --- Sub Schemas matching Angular Interfaces ---
 
@@ -24,7 +25,7 @@ const educationSchema = new mongoose.Schema({
   id: { type: String, required: true },
   institution: { type: String, required: true }, // Changed from 'school'
   degree: { type: String, required: true },
-  major: { type: String, required: true }, // Changed from 'field'
+  major: { type: String, default: '' },
   startDate: String,
   endDate: String,
   isCurrent: { type: Boolean, default: false },
@@ -95,20 +96,33 @@ customResumeSchema.pre('save', function(next) {
   next();
 });
 
-// Calculate completion percentage (Adjusted for new schema structure)
+/** Legacy / imported drafts may omit subdocument `id`, which breaks required validators on save. */
+customResumeSchema.pre('validate', function(next) {
+  const assignId = (doc) => {
+    if (doc && !doc.id) doc.id = crypto.randomUUID();
+  };
+  (this.educations || []).forEach(assignId);
+  (this.experiences || []).forEach(assignId);
+  (this.projects || []).forEach(assignId);
+  (this.skills || []).forEach(assignId);
+  next();
+});
+
+// Calculate completion — must match builder UI (resume-builder/builder/builder.component.ts)
 customResumeSchema.methods.calculateCompletion = function() {
+  const skillCount =
+    (this.skills || []).reduce((sum, cat) => sum + (Array.isArray(cat?.skills) ? cat.skills.length : 0), 0) || 0;
+
   const checks = [
-    !!(this.personal?.firstName && this.personal?.email), // Contact Info
-    !!this.personal?.summary, // Summary
-    (this.experiences?.length || 0) > 0, // Experience
-    (this.educations?.length || 0) > 0, // Education
-    (this.projects?.length || 0) > 0, // Projects
-    (this.skills?.length || 0) > 0 // Skills (checking if at least one category exists)
+    !!(this.personal?.firstName && this.personal?.email),
+    (this.educations?.length || 0) > 0,
+    (this.experiences?.length || 0) > 0,
+    (this.projects?.length || 0) > 0,
+    skillCount >= 3,
+    !!this.personal?.summary,
   ];
-  
-  this.completionPercentage = Math.round(
-    (checks.filter(Boolean).length / checks.length) * 100
-  );
+
+  this.completionPercentage = Math.round((checks.filter(Boolean).length / checks.length) * 100);
 };
 
 export default mongoose.model("CustomResume", customResumeSchema);

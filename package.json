@@ -6,7 +6,8 @@
   "scripts": {
     "test": "node --test src/services/subscriptionAccess.test.js",
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "inspect:user-resumes": "node scripts/inspect-user-resumes.mjs"
   },
   "keywords": [],
   "author": "",
