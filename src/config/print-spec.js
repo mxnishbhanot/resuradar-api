@@ -16,6 +16,28 @@ export const CONTENT_HEIGHT_MM = PAGE_HEIGHT_MM - 2 * MARGIN_MM;
 export const INNER_PAD_X_MM = 5;
 export const INNER_PAD_Y_MM = 5;
 
+/** Default PDF palette when body/heading overrides are unset (professional slate neutrals). */
+export const STANDARD_RESUME_TOKENS = {
+  light: {
+    ink: "#171717",
+    heading: "#0f172a",
+    muted: "#64748b",
+    border: "#e2e8f0",
+    bg: "#ffffff",
+    soft: "#f8fafc",
+    link: "#334155",
+  },
+  dark: {
+    ink: "#f1f5f9",
+    heading: "#f8fafc",
+    muted: "#94a3b8",
+    border: "#334155",
+    bg: "#0f172a",
+    soft: "#1e293b",
+    link: "#e2e8f0",
+  },
+};
+
 /** Playwright page.pdf margin option */
 export function getPdfMarginCss() {
   const m = `${MARGIN_MM}mm`;
@@ -26,11 +48,7 @@ const DEFAULT_SECTION_ORDER = ["summary", "experience", "education", "projects",
 
 const ALLOWED_SECTIONS = new Set(DEFAULT_SECTION_ORDER);
 
-/**
- * @param {string[]} order
- * @param {'modern'|'corporate'|'faang'|'luxury'|'executive'} templateName
- */
-/** @param {string[]} order @param {string} [_templateName] reserved for per-template defaults */
+/** @param {string[]} order @param {string} [_templateName] reserved for future per-layout defaults */
 export function normalizeSectionOrder(order, _templateName) {
   const base = [...DEFAULT_SECTION_ORDER];
   if (!Array.isArray(order) || order.length === 0) return base;
@@ -108,14 +126,14 @@ export function buildPrintSpecStyleBlock(layout, appearance) {
   const L = normalizeLayout(layout);
   const A = normalizeAppearance(appearance);
   const linkDeco = A.underlineLinks ? "underline" : "none";
-  const bodyInk = A.bodyColor || (A.colorMode === "dark" ? "#fafafa" : "#0a0a0a");
-  const headingInk =
-    A.headingColor || (A.colorMode === "dark" ? "#fafafa" : "#0a0a0a");
-  const muted = A.colorMode === "dark" ? "#a3a3a3" : "#525252";
-  const border = A.colorMode === "dark" ? "#404040" : "#e5e5e5";
-  const bg = A.colorMode === "dark" ? "#0a0a0a" : "#ffffff";
-  const soft = A.colorMode === "dark" ? "#171717" : "#f5f5f5";
-  const link = A.colorMode === "dark" ? "#e5e5e5" : "#171717";
+  const T = A.colorMode === "dark" ? STANDARD_RESUME_TOKENS.dark : STANDARD_RESUME_TOKENS.light;
+  const bodyInk = A.bodyColor || T.ink;
+  const headingInk = A.headingColor || T.heading;
+  const muted = T.muted;
+  const border = T.border;
+  const bg = T.bg;
+  const soft = T.soft;
+  const link = T.link;
   const codeBg = A.colorMode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
 
   return `<style id="rr-print-spec" data-rr-injected="1">

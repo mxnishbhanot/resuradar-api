@@ -9,13 +9,17 @@ import {
   normalizeSectionOrder,
 } from "../config/print-spec.js";
 
+/** Single standard layout on disk; legacy `templateName` values are ignored. */
+const RESUME_LAYOUT_SLUG = "modern";
+
 /**
  * @param {object} resumeData
- * @param {string} templateName
+ * @param {string} [_templateName] legacy slug (ignored; always uses standard layout)
  * @param {{ includeDesignerBridge?: boolean }} [options]
  */
-export const renderTemplateHTML = (resumeData, templateName, options = {}) => {
+export const renderTemplateHTML = (resumeData, _templateName, options = {}) => {
   const cleanData = JSON.parse(JSON.stringify(resumeData));
+  const templateName = RESUME_LAYOUT_SLUG;
 
   handlebars.registerHelper("formatDate", function (dateString) {
     if (!dateString) return "";

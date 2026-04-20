@@ -44,7 +44,7 @@ export const config = {
   subscriptionPeriodDays: Number(process.env.SUBSCRIPTION_PERIOD_DAYS || "30"),
 
   /** Free tier: 3 templates. Pro unlocks the other 2 (luxury, executive) unless overridden. */
-  freeBuilderTemplates: csvList(process.env.FREE_BUILDER_TEMPLATES, "modern,corporate,faang"),
+  freeBuilderTemplates: csvList(process.env.FREE_BUILDER_TEMPLATES, "modern"),
 
   phonepeWebhookUsername: process.env.PHONEPE_WEBHOOK_USERNAME || "",
   phonepeWebhookPassword: process.env.PHONEPE_WEBHOOK_PASSWORD || "",

@@ -12,12 +12,12 @@ export const exportResumeController = async (req, res) => {
     const template = ensureEnum(req.query.template, "template", allowedTemplates);
 
     const user = await User.findById(req.user.userId);
-    if (!userHasActivePremium(user) && !isFreeBuilderTemplate(template)) {
+    if (!userHasActivePremium(user) && !isFreeBuilderTemplate("modern")) {
       return res.status(403).json({
         success: false,
         code: "TEMPLATE_PREMIUM_ONLY",
         message:
-          "This template is available on Pro. Upgrade to unlock all templates and premium PDF exports.",
+          "PDF export is not available on your current plan. Upgrade to export your resume.",
       });
     }
 
