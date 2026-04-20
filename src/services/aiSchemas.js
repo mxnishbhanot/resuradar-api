@@ -144,7 +144,7 @@ const educationItemSchema = {
 
 const experienceItemSchema = {
   type: Type.OBJECT,
-  required: ["title", "company", "startDate", "endDate", "isCurrent", "bullets"],
+  required: ["title", "company", "startDate", "isCurrent", "bullets"],
   properties: {
     title: { type: Type.STRING },
     company: { type: Type.STRING },
