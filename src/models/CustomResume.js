@@ -87,6 +87,19 @@ const customResumeSchema = new mongoose.Schema({
           ),
           default: undefined,
         },
+        appearance: {
+          type: new mongoose.Schema(
+            {
+              colorMode: { type: String },
+              headingWeight: { type: Number },
+              underlineLinks: { type: Boolean },
+              bodyColor: { type: String },
+              headingColor: { type: String },
+            },
+            { _id: false }
+          ),
+          default: undefined,
+        },
       },
       { _id: false }
     ),

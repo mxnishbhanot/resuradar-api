@@ -1,8 +1,10 @@
 import fs from "fs";
 import handlebars from "handlebars";
+import { formatInlineText } from "../config/text-format.js";
 import {
   appendDesignerBridge,
   buildPrintSpecStyleBlock,
+  normalizeAppearance,
   normalizeLayout,
   normalizeSectionOrder,
 } from "../config/print-spec.js";
@@ -62,10 +64,15 @@ export const renderTemplateHTML = (resumeData, templateName, options = {}) => {
 
   handlebars.registerHelper("eq", (a, b) => a === b);
 
+  handlebars.registerHelper("fmt", (v) =>
+    new handlebars.SafeString(formatInlineText(v))
+  );
+
   const ts = cleanData.templateSettings && typeof cleanData.templateSettings === "object"
     ? cleanData.templateSettings
     : {};
   const layout = normalizeLayout(ts.layout);
+  const appearance = normalizeAppearance(ts.appearance);
   const sectionOrder = normalizeSectionOrder(ts.sectionOrder, templateName);
 
   const html = fs.readFileSync(`src/config/templates/${templateName}/template.hbs`, "utf8");
@@ -76,10 +83,11 @@ export const renderTemplateHTML = (resumeData, templateName, options = {}) => {
     ...cleanData,
     templateSettings: ts,
     layout,
+    appearance,
     sectionOrder,
   });
 
-  const inject = buildPrintSpecStyleBlock(layout);
+  const inject = buildPrintSpecStyleBlock(layout, appearance);
   out = out.replace(/<head[^>]*>/i, (m) => `${m}${inject}`);
 
   if (options.includeDesignerBridge !== false) {

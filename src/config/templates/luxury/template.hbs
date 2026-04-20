@@ -3,23 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <title>{{personal.firstName}} {{personal.lastName}}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Infant:ital,wght@0,500;0,600;1,400&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
   <style>
     @page { margin: 0; size: A4; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Outfit', 'Segoe UI', sans-serif;
       font-size: 10pt;
-      line-height: 1.5;
-      color: #292524;
-      background: #fff;
+      line-height: calc(1.5 * var(--rr-line-height-mul, 1));
+      color: var(--rr-ink);
+      background: var(--rr-bg);
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
     .frame {
-      border: 1pt solid #d6d3d1;
+      border: 1pt solid var(--rr-border);
       padding: 14pt 16pt;
       min-height: 0;
     }
@@ -27,51 +23,48 @@
       text-align: center;
       padding-bottom: 16pt;
       margin-bottom: 18pt;
-      border-bottom: 1pt solid #c4a574;
+      border-bottom: 1pt solid var(--rr-border);
     }
     .name {
-      font-family: 'Cormorant Infant', 'Times New Roman', serif;
-      font-size: 34pt;
+      font-size: 28pt;
       font-weight: 600;
-      letter-spacing: 0.06em;
-      color: #1c1917;
+      letter-spacing: 0.04em;
+      color: var(--rr-heading);
       margin-bottom: 6pt;
     }
     .headline {
-      font-family: 'Cormorant Infant', serif;
-      font-size: 12pt;
+      font-size: 11pt;
       font-style: italic;
       font-weight: 500;
-      color: #78716c;
+      color: var(--rr-muted);
       margin-bottom: 12pt;
     }
     .contact {
       font-size: 9pt;
-      color: #78716c;
+      color: var(--rr-muted);
       font-weight: 400;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.04em;
     }
     .contact span:not(:last-child)::after {
       content: '  ·  ';
-      color: #c4a574;
+      color: var(--rr-border);
       font-weight: 300;
     }
     .section { margin-bottom: calc(16pt * var(--rr-section-gap-mul, 1)); page-break-inside: avoid; }
     .section-title {
-      font-family: 'Cormorant Infant', serif;
-      font-size: 12pt;
-      font-weight: 600;
-      letter-spacing: 0.22em;
+      font-size: 10pt;
+      font-weight: var(--rr-heading-weight, 700);
+      letter-spacing: 0.18em;
       text-transform: uppercase;
-      color: #44403c;
+      color: var(--rr-heading);
       text-align: center;
       margin-bottom: 12pt;
       padding-bottom: 8pt;
-      border-bottom: 1pt solid #e7e5e4;
+      border-bottom: 1pt solid var(--rr-border);
     }
     .summary {
       text-align: justify;
-      color: #44403c;
+      color: var(--rr-ink);
       font-size: 10pt;
       line-height: 1.6;
       padding: 0 4pt;
@@ -84,9 +77,9 @@
       align-items: baseline;
       margin-bottom: 5pt;
     }
-    .entry-title { font-weight: 600; font-size: 11pt; color: #1c1917; }
-    .entry-sub { font-size: 9.5pt; color: #78716c; font-style: italic; margin-top: 3pt; }
-    .entry-date { font-size: 9pt; color: #a8a29e; white-space: nowrap; font-weight: 500; }
+    .entry-title { font-weight: 600; font-size: 11pt; color: var(--rr-heading); }
+    .entry-sub { font-size: 9.5pt; color: var(--rr-muted); font-style: italic; margin-top: 3pt; }
+    .entry-date { font-size: 9pt; color: var(--rr-muted); white-space: nowrap; font-weight: 500; }
     ul.bullets {
       list-style: none;
       margin: 6pt 0 0 0;
@@ -97,7 +90,7 @@
       padding-left: 14pt;
       margin-bottom: 5pt;
       font-size: 9.5pt;
-      color: #44403c;
+      color: var(--rr-ink);
       line-height: 1.5;
       text-align: justify;
     }
@@ -105,7 +98,7 @@
       content: '—';
       position: absolute;
       left: 0;
-      color: #c4a574;
+      color: var(--rr-muted);
       font-weight: 300;
     }
     .skills-grid {
@@ -116,31 +109,30 @@
     .skill-card {
       text-align: center;
       padding: 10pt 8pt;
-      border: 1pt solid #e7e5e4;
+      border: 1pt solid var(--rr-border);
     }
     .skill-card .lab {
       font-size: 8.5pt;
       font-weight: 600;
-      letter-spacing: 0.12em;
+      letter-spacing: 0.1em;
       text-transform: uppercase;
-      color: #292524;
+      color: var(--rr-heading);
       margin-bottom: 6pt;
       padding-bottom: 6pt;
-      border-bottom: 1pt solid #c4a574;
+      border-bottom: 1pt solid var(--rr-border);
     }
-    .skill-card .vals { font-size: 9pt; color: #57534e; line-height: 1.55; }
+    .skill-card .vals { font-size: 9pt; color: var(--rr-muted); line-height: 1.55; }
     .tech {
       font-size: 8.75pt;
-      color: #78716c;
+      color: var(--rr-muted);
       margin-top: 6pt;
       padding-top: 6pt;
-      border-top: 1pt solid #f5f5f4;
+      border-top: 1pt solid var(--rr-border);
       font-style: italic;
     }
-    a { color: #854d0e; text-decoration: none; font-weight: 500; border-bottom: 0.5pt solid #d6d3d1; }
   </style>
 </head>
-<body>
+<body class="rr-resume">
   <div class="frame">
 
     <header class="header">
@@ -161,7 +153,7 @@
         {{#if @root.personal.summary}}
         <section class="section">
           <div class="section-title">Profile</div>
-          <div class="summary" data-rr-field="personal.summary">{{@root.personal.summary}}</div>
+          <div class="summary" data-rr-field="personal.summary">{{{fmt @root.personal.summary}}}</div>
         </section>
         {{/if}}
       {{/if}}
@@ -186,7 +178,7 @@
             {{#if role}}<div class="entry-sub">{{role}}</div>{{/if}}
             {{#if bullets.length}}
             <ul class="bullets">
-              {{#each bullets}}<li>{{this}}</li>{{/each}}
+              {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
             </ul>
             {{/if}}
           </div>
@@ -212,7 +204,7 @@
             </div>
             {{#if bullets.length}}
             <ul class="bullets">
-              {{#each bullets}}<li>{{this}}</li>{{/each}}
+              {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
             </ul>
             {{/if}}
           </div>
@@ -239,7 +231,7 @@
             {{/if}}
             {{#if bullets.length}}
             <ul class="bullets">
-              {{#each bullets}}<li>{{this}}</li>{{/each}}
+              {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
             </ul>
             {{/if}}
           </div>
@@ -254,8 +246,8 @@
           <div class="skills-grid">
             {{#each @root.skills}}
             <div class="skill-card">
-              <div class="lab">{{name}}</div>
-              <div class="vals">{{#each skills}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</div>
+              <div class="lab">{{{fmt name}}}</div>
+              <div class="vals">{{#each skills}}{{{fmt this}}}{{#unless @last}}, {{/unless}}{{/each}}</div>
             </div>
             {{/each}}
           </div>

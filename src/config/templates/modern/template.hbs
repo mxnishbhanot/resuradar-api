@@ -3,25 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <title>{{personal.firstName}} {{personal.lastName}}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap" rel="stylesheet">
   <style>
     @page { margin: 0; size: A4; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    :root {
-      --ink: #0f172a;
-      --muted: #64748b;
-      --line: #e2e8f0;
-      --accent: #0f766e;
-      --accent-soft: #ccfbf1;
-    }
     body {
-      font-family: 'DM Sans', system-ui, sans-serif;
       font-size: 9.75pt;
-      line-height: 1.45;
-      color: var(--ink);
-      background: #fff;
+      line-height: calc(1.45 * var(--rr-line-height-mul, 1));
+      color: var(--rr-ink);
+      background: var(--rr-bg);
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
@@ -32,41 +21,41 @@
       gap: 16pt;
       padding-bottom: 12pt;
       margin-bottom: 12pt;
-      border-bottom: 2pt solid var(--accent);
+      border-bottom: 1.5pt solid var(--rr-border);
     }
     .name {
       font-size: 21pt;
       font-weight: 700;
       letter-spacing: -0.02em;
-      color: var(--ink);
+      color: var(--rr-heading);
       line-height: 1.1;
     }
-    .headline { font-size: 10.5pt; color: var(--muted); font-weight: 500; margin-top: 4pt; }
-    .contact-col { text-align: right; font-size: 8.75pt; color: var(--muted); font-weight: 500; line-height: 1.5; }
+    .headline { font-size: 10.5pt; color: var(--rr-muted); font-weight: 500; margin-top: 4pt; }
+    .contact-col { text-align: right; font-size: 8.75pt; color: var(--rr-muted); font-weight: 500; line-height: 1.5; }
     .section { margin-bottom: calc(12pt * var(--rr-section-gap-mul, 1)); page-break-inside: avoid; }
     .section-title {
       font-size: 8.5pt;
-      font-weight: 700;
+      font-weight: var(--rr-heading-weight, 700);
       letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: var(--accent);
+      color: var(--rr-heading);
       margin-bottom: 7pt;
     }
     .summary {
       font-size: 9.75pt;
-      color: #334155;
+      color: var(--rr-ink);
       line-height: 1.5;
       text-align: justify;
     }
     .pill-skill {
       margin-bottom: 8pt;
       padding: 6pt 8pt;
-      background: var(--accent-soft);
+      background: var(--rr-soft);
       border-radius: 3pt;
-      border-left: 3pt solid var(--accent);
+      border-left: 2pt solid var(--rr-border);
     }
-    .pill-skill .lab { font-size: 8.75pt; font-weight: 700; color: var(--ink); margin-bottom: 2pt; }
-    .pill-skill .vals { font-size: 8.25pt; color: #475569; }
+    .pill-skill .lab { font-size: 8.75pt; font-weight: 700; color: var(--rr-heading); margin-bottom: 2pt; }
+    .pill-skill .vals { font-size: 8.25pt; color: var(--rr-muted); }
     .entry { margin-bottom: 11pt; page-break-inside: avoid; position: relative; padding-left: 10pt; }
     .entry::before {
       content: '';
@@ -76,27 +65,36 @@
       width: 5pt;
       height: 5pt;
       border-radius: 50%;
-      background: var(--accent);
+      background: var(--rr-border);
     }
     .row { display: flex; justify-content: space-between; gap: 10pt; align-items: baseline; }
-    .t1 { font-size: 10.25pt; font-weight: 700; color: var(--ink); }
-    .t2 { font-size: 9.25pt; font-weight: 600; color: #334155; margin-top: 1pt; }
-    .t3 { font-size: 8.75pt; color: var(--muted); font-style: italic; }
-    .dt { font-size: 8.25pt; font-weight: 600; color: var(--accent); white-space: nowrap; background: #f0fdfa; padding: 2pt 6pt; border-radius: 2pt; }
+    .t1 { font-size: 10.25pt; font-weight: 700; color: var(--rr-heading); }
+    .t2 { font-size: 9.25pt; font-weight: 600; color: var(--rr-ink); margin-top: 1pt; }
+    .t3 { font-size: 8.75pt; color: var(--rr-muted); font-style: italic; }
+    .dt {
+      font-size: 8.25pt;
+      font-weight: 600;
+      color: var(--rr-muted);
+      white-space: nowrap;
+      background: var(--rr-soft);
+      padding: 2pt 6pt;
+      border-radius: 2pt;
+      border: 0.5pt solid var(--rr-border);
+    }
     ul.bullets { list-style: none; margin: 5pt 0 0 0; padding: 0; }
     ul.bullets li {
       position: relative;
       padding-left: 11pt;
       margin-bottom: 3pt;
       font-size: 9pt;
-      color: #334155;
+      color: var(--rr-ink);
       line-height: 1.45;
     }
     ul.bullets li::before {
       content: '›';
       position: absolute;
       left: 0;
-      color: var(--accent);
+      color: var(--rr-muted);
       font-weight: 700;
     }
     .tags { margin-top: 4pt; }
@@ -105,15 +103,14 @@
       font-size: 7.5pt;
       padding: 2pt 5pt;
       margin: 2pt 4pt 0 0;
-      border: 0.5pt solid #cbd5e1;
+      border: 0.5pt solid var(--rr-border);
       border-radius: 2pt;
-      color: #475569;
+      color: var(--rr-muted);
       font-weight: 500;
     }
-    a { color: var(--accent); text-decoration: none; font-weight: 600; }
   </style>
 </head>
-<body>
+<body class="rr-resume">
 
   <div class="top">
     <div>
@@ -135,7 +132,7 @@
       {{#if @root.personal.summary}}
       <section class="section">
         <div class="section-title">Summary</div>
-        <div class="summary" data-rr-field="personal.summary">{{@root.personal.summary}}</div>
+        <div class="summary" data-rr-field="personal.summary">{{{fmt @root.personal.summary}}}</div>
       </section>
       {{/if}}
     {{/if}}
@@ -158,7 +155,7 @@
           </div>
           {{#if bullets.length}}
           <ul class="bullets">
-            {{#each bullets}}<li>{{this}}</li>{{/each}}
+            {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
           </ul>
           {{/if}}
         </div>
@@ -181,7 +178,7 @@
           </div>
           {{#if bullets.length}}
           <ul class="bullets">
-            {{#each bullets}}<li>{{this}}</li>{{/each}}
+            {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
           </ul>
           {{/if}}
         </div>
@@ -210,7 +207,7 @@
           {{/if}}
           {{#if bullets.length}}
           <ul class="bullets">
-            {{#each bullets}}<li>{{this}}</li>{{/each}}
+            {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
           </ul>
           {{/if}}
         </div>
@@ -224,8 +221,8 @@
         <div class="section-title">Skills</div>
         {{#each @root.skills}}
         <div class="pill-skill">
-          <div class="lab">{{name}}</div>
-          <div class="vals">{{#each skills}}{{this}}{{#unless @last}} · {{/unless}}{{/each}}</div>
+          <div class="lab">{{{fmt name}}}</div>
+          <div class="vals">{{#each skills}}{{{fmt this}}}{{#unless @last}} · {{/unless}}{{/each}}</div>
         </div>
         {{/each}}
       </section>

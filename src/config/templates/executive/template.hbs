@@ -3,18 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <title>{{personal.firstName}} {{personal.lastName}}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,400&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     @page { margin: 0; size: A4; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Source Sans 3', 'Segoe UI', sans-serif;
       font-size: 10.25pt;
-      line-height: 1.48;
-      color: #1c1917;
-      background: #fff;
+      line-height: calc(1.48 * var(--rr-line-height-mul, 1));
+      color: var(--rr-ink);
+      background: var(--rr-bg);
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
@@ -22,50 +18,47 @@
       text-align: center;
       padding-bottom: 14pt;
       margin-bottom: 16pt;
-      border-bottom: 1pt solid #a8a29e;
+      border-bottom: 1pt solid var(--rr-border);
     }
     .name {
-      font-family: 'Cormorant Garamond', 'Times New Roman', serif;
-      font-size: 32pt;
+      font-size: 26pt;
       font-weight: 600;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.06em;
       text-transform: uppercase;
-      color: #292524;
+      color: var(--rr-heading);
       margin-bottom: 6pt;
     }
     .headline {
-      font-family: 'Cormorant Garamond', Georgia, serif;
-      font-size: 12pt;
+      font-size: 11pt;
       font-style: italic;
-      color: #57534e;
+      color: var(--rr-muted);
       margin-bottom: 12pt;
     }
     .contact {
       font-size: 9.25pt;
-      color: #78716c;
+      color: var(--rr-muted);
       font-weight: 500;
       letter-spacing: 0.04em;
     }
     .contact span:not(:last-child)::after {
       content: ' · ';
-      color: #d6d3d1;
+      color: var(--rr-border);
     }
     .section { margin-bottom: calc(15pt * var(--rr-section-gap-mul, 1)); page-break-inside: avoid; }
     .section-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 13pt;
-      font-weight: 600;
-      letter-spacing: 0.18em;
+      font-size: 11pt;
+      font-weight: var(--rr-heading-weight, 700);
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: #44403c;
+      color: var(--rr-heading);
       text-align: center;
       margin-bottom: 12pt;
       padding-bottom: 6pt;
-      border-bottom: 1pt solid #e7e5e4;
+      border-bottom: 1pt solid var(--rr-border);
     }
     .summary {
       text-align: justify;
-      color: #44403c;
+      color: var(--rr-ink);
       max-width: 100%;
       font-size: 10pt;
     }
@@ -77,9 +70,9 @@
       align-items: baseline;
       margin-bottom: 4pt;
     }
-    .entry-title { font-weight: 700; font-size: 10.75pt; color: #1c1917; }
-    .entry-co { font-weight: 600; font-size: 10.25pt; color: #44403c; margin-top: 2pt; }
-    .entry-date { font-size: 9pt; color: #78716c; white-space: nowrap; font-weight: 600; }
+    .entry-title { font-weight: 700; font-size: 10.75pt; color: var(--rr-heading); }
+    .entry-co { font-weight: 600; font-size: 10.25pt; color: var(--rr-ink); margin-top: 2pt; }
+    .entry-date { font-size: 9pt; color: var(--rr-muted); white-space: nowrap; font-weight: 600; }
     ul.bullets {
       list-style: none;
       margin: 6pt 0 0 0;
@@ -90,7 +83,7 @@
       padding-left: 12pt;
       margin-bottom: 4pt;
       font-size: 9.75pt;
-      color: #44403c;
+      color: var(--rr-ink);
       line-height: 1.45;
     }
     ul.bullets li::before {
@@ -98,17 +91,16 @@
       position: absolute;
       left: 0;
       font-weight: 700;
-      color: #a8a29e;
+      color: var(--rr-muted);
     }
     .skills-wrap { column-count: 2; column-gap: 18pt; }
     .skill-row { break-inside: avoid; margin-bottom: 8pt; }
-    .skill-row strong { font-size: 9.5pt; color: #292524; display: block; margin-bottom: 2pt; }
-    .skill-row span { font-size: 9pt; color: #57534e; }
-    .tech { font-size: 8.75pt; color: #78716c; margin-top: 4pt; font-style: italic; }
-    a { color: #57534e; text-decoration: underline; text-underline-offset: 2pt; }
+    .skill-row strong { font-size: 9.5pt; color: var(--rr-heading); display: block; margin-bottom: 2pt; }
+    .skill-row span { font-size: 9pt; color: var(--rr-muted); }
+    .tech { font-size: 8.75pt; color: var(--rr-muted); margin-top: 4pt; font-style: italic; }
   </style>
 </head>
-<body>
+<body class="rr-resume">
 
   <header class="header">
     <div class="name">{{personal.firstName}} {{personal.lastName}}</div>
@@ -128,7 +120,7 @@
       {{#if @root.personal.summary}}
       <section class="section">
         <div class="section-title">Profile</div>
-        <div class="summary" data-rr-field="personal.summary">{{@root.personal.summary}}</div>
+        <div class="summary" data-rr-field="personal.summary">{{{fmt @root.personal.summary}}}</div>
       </section>
       {{/if}}
     {{/if}}
@@ -151,7 +143,7 @@
           {{#if role}}<div class="entry-co" style="font-weight:500;font-style:italic;">{{role}}</div>{{/if}}
           {{#if bullets.length}}
           <ul class="bullets">
-            {{#each bullets}}<li>{{this}}</li>{{/each}}
+            {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
           </ul>
           {{/if}}
         </div>
@@ -177,7 +169,7 @@
           </div>
           {{#if bullets.length}}
           <ul class="bullets">
-            {{#each bullets}}<li>{{this}}</li>{{/each}}
+            {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
           </ul>
           {{/if}}
         </div>
@@ -202,7 +194,7 @@
           {{#if techStack.length}}<div class="tech">{{#each techStack}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</div>{{/if}}
           {{#if bullets.length}}
           <ul class="bullets">
-            {{#each bullets}}<li>{{this}}</li>{{/each}}
+            {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
           </ul>
           {{/if}}
         </div>
@@ -217,8 +209,8 @@
         <div class="skills-wrap">
           {{#each @root.skills}}
           <div class="skill-row">
-            <strong>{{name}}</strong>
-            <span>{{#each skills}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</span>
+            <strong>{{{fmt name}}}</strong>
+            <span>{{#each skills}}{{{fmt this}}}{{#unless @last}}, {{/unless}}{{/each}}</span>
           </div>
           {{/each}}
         </div>

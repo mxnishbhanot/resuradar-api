@@ -3,25 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <title>{{personal.firstName}} {{personal.lastName}}</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     @page { margin: 0; size: A4; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
       font-size: 9.5pt;
-      line-height: 1.42;
-      color: #111827;
-      background: #fff;
+      line-height: calc(1.42 * var(--rr-line-height-mul, 1));
+      color: var(--rr-ink);
+      background: var(--rr-bg);
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
     .bar {
-      height: 4pt;
-      background: #111827;
-      margin: 0 0 10mm 0;
+      height: 2pt;
+      background: var(--rr-border);
+      margin: 0 0 10pt 0;
       width: 100%;
     }
     .header { margin-bottom: 12pt; }
@@ -29,54 +25,53 @@
       font-size: 20pt;
       font-weight: 700;
       letter-spacing: -0.03em;
-      color: #111827;
+      color: var(--rr-heading);
     }
-    .headline { font-size: 10pt; font-weight: 500; color: #4b5563; margin-top: 3pt; }
+    .headline { font-size: 10pt; font-weight: 500; color: var(--rr-muted); margin-top: 3pt; }
     .meta {
       display: flex;
       flex-wrap: wrap;
       gap: 4pt 12pt;
       margin-top: 8pt;
-      font-family: 'IBM Plex Mono', monospace;
       font-size: 8.25pt;
-      color: #6b7280;
+      color: var(--rr-muted);
     }
     .section { margin-bottom: calc(12pt * var(--rr-section-gap-mul, 1)); page-break-inside: avoid; }
     .section-title {
-      font-family: 'IBM Plex Mono', monospace;
       font-size: 8pt;
-      font-weight: 500;
-      letter-spacing: 0.16em;
+      font-weight: var(--rr-heading-weight, 700);
+      letter-spacing: 0.14em;
       text-transform: uppercase;
-      color: #fff;
-      background: #111827;
+      color: var(--rr-heading);
+      background: var(--rr-soft);
+      border: 0.5pt solid var(--rr-border);
       display: inline-block;
       padding: 3pt 8pt;
       margin-bottom: 8pt;
     }
-    .summary { font-size: 9.5pt; color: #374151; line-height: 1.5; }
+    .summary { font-size: 9.5pt; color: var(--rr-ink); line-height: 1.5; }
     .entry {
       margin-bottom: 10pt;
       padding-left: 10pt;
-      border-left: 2pt solid #e5e7eb;
+      border-left: 2pt solid var(--rr-border);
       page-break-inside: avoid;
     }
     .row { display: flex; justify-content: space-between; gap: 12pt; align-items: flex-start; }
-    .role { font-size: 10.25pt; font-weight: 700; color: #111827; }
-    .co { font-size: 9.25pt; font-weight: 600; color: #374151; margin-top: 1pt; }
-    .sub { font-size: 8.5pt; color: #6b7280; margin-top: 2pt; }
+    .role { font-size: 10.25pt; font-weight: 700; color: var(--rr-heading); }
+    .co { font-size: 9.25pt; font-weight: 600; color: var(--rr-ink); margin-top: 1pt; }
+    .sub { font-size: 8.5pt; color: var(--rr-muted); margin-top: 2pt; }
     .dates {
-      font-family: 'IBM Plex Mono', monospace;
       font-size: 8pt;
-      font-weight: 500;
-      color: #111827;
-      background: #f3f4f6;
+      font-weight: 600;
+      color: var(--rr-muted);
+      background: var(--rr-soft);
+      border: 0.5pt solid var(--rr-border);
       padding: 3pt 6pt;
       white-space: nowrap;
       flex-shrink: 0;
     }
     ul.bullets { margin: 5pt 0 0 12pt; padding: 0; }
-    ul.bullets li { margin-bottom: 3pt; font-size: 9pt; color: #374151; line-height: 1.45; }
+    ul.bullets li { margin-bottom: 3pt; font-size: 9pt; color: var(--rr-ink); line-height: 1.45; }
     .skills {
       display: grid;
       grid-template-columns: 140pt 1fr;
@@ -85,18 +80,16 @@
     }
     .skills .k {
       font-weight: 700;
-      color: #111827;
-      font-family: 'IBM Plex Mono', monospace;
+      color: var(--rr-heading);
       font-size: 8pt;
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
-    .skills .v { color: #4b5563; }
-    .tech { font-family: 'IBM Plex Mono', monospace; font-size: 7.75pt; color: #6b7280; margin-top: 4pt; }
-    a { color: #111827; font-weight: 600; }
+    .skills .v { color: var(--rr-muted); }
+    .tech { font-size: 7.75pt; color: var(--rr-muted); margin-top: 4pt; }
   </style>
 </head>
-<body>
+<body class="rr-resume">
   <div class="bar"></div>
 
   <header class="header">
@@ -117,7 +110,7 @@
       {{#if @root.personal.summary}}
       <section class="section">
         <div class="section-title">Summary</div>
-        <div class="summary" data-rr-field="personal.summary">{{@root.personal.summary}}</div>
+        <div class="summary" data-rr-field="personal.summary">{{{fmt @root.personal.summary}}}</div>
       </section>
       {{/if}}
     {{/if}}
@@ -140,7 +133,7 @@
           </div>
           {{#if bullets.length}}
           <ul class="bullets">
-            {{#each bullets}}<li>{{this}}</li>{{/each}}
+            {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
           </ul>
           {{/if}}
         </div>
@@ -166,7 +159,7 @@
           </div>
           {{#if bullets.length}}
           <ul class="bullets">
-            {{#each bullets}}<li>{{this}}</li>{{/each}}
+            {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
           </ul>
           {{/if}}
         </div>
@@ -195,7 +188,7 @@
           {{/if}}
           {{#if bullets.length}}
           <ul class="bullets">
-            {{#each bullets}}<li>{{this}}</li>{{/each}}
+            {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
           </ul>
           {{/if}}
         </div>
@@ -209,8 +202,8 @@
         <div class="section-title">Skills</div>
         <div class="skills">
           {{#each @root.skills}}
-          <div class="k">{{name}}</div>
-          <div class="v">{{#each skills}}{{this}}{{#unless @last}}, {{/unless}}{{/each}}</div>
+          <div class="k">{{{fmt name}}}</div>
+          <div class="v">{{#each skills}}{{{fmt this}}}{{#unless @last}}, {{/unless}}{{/each}}</div>
           {{/each}}
         </div>
       </section>
