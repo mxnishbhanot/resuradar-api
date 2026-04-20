@@ -16,16 +16,16 @@ export const CONTENT_HEIGHT_MM = PAGE_HEIGHT_MM - 2 * MARGIN_MM;
 export const INNER_PAD_X_MM = 5;
 export const INNER_PAD_Y_MM = 5;
 
-/** Default PDF palette when body/heading overrides are unset (professional slate neutrals). */
+/** Default PDF palette (ATS-style: near-black on white, standard resume blue links). */
 export const STANDARD_RESUME_TOKENS = {
   light: {
-    ink: "#171717",
-    heading: "#0f172a",
-    muted: "#64748b",
-    border: "#e2e8f0",
+    ink: "#000000",
+    heading: "#000000",
+    muted: "#333333",
+    border: "#cccccc",
     bg: "#ffffff",
-    soft: "#f8fafc",
-    link: "#334155",
+    soft: "#ffffff",
+    link: "#0563c1",
   },
   dark: {
     ink: "#f1f5f9",
@@ -44,7 +44,8 @@ export function getPdfMarginCss() {
   return { top: m, bottom: m, left: m, right: m };
 }
 
-const DEFAULT_SECTION_ORDER = ["summary", "experience", "education", "projects", "skills"];
+/** Matches standard single-column resume: summary → jobs → projects → school → skills. */
+const DEFAULT_SECTION_ORDER = ["summary", "experience", "projects", "education", "skills"];
 
 const ALLOWED_SECTIONS = new Set(DEFAULT_SECTION_ORDER);
 
@@ -137,7 +138,7 @@ export function buildPrintSpecStyleBlock(layout, appearance) {
   const codeBg = A.colorMode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
 
   return `<style id="rr-print-spec" data-rr-injected="1">
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400&display=swap');
 :root {
   --rr-content-width-mm: ${CONTENT_WIDTH_MM};
   --rr-content-height-mm: ${CONTENT_HEIGHT_MM};
@@ -160,7 +161,7 @@ export function buildPrintSpecStyleBlock(layout, appearance) {
   --rr-inner-pad-y: ${INNER_PAD_Y_MM}mm;
 }
 body.rr-resume {
-  font-family: 'Inter', system-ui, -apple-system, sans-serif !important;
+  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, Helvetica, sans-serif !important;
   padding: var(--rr-inner-pad-y) var(--rr-inner-pad-x) !important;
   max-width: ${CONTENT_WIDTH_MM}mm !important;
   width: 100% !important;
