@@ -14,9 +14,18 @@
       -webkit-print-color-adjust: exact;
       print-color-adjust: exact;
     }
+    .resume-doc {
+      display: flex;
+      flex-direction: column;
+      gap: calc(11pt * var(--rr-section-gap-mul, 1));
+    }
+    .resume-flow {
+      display: flex;
+      flex-direction: column;
+      gap: calc(11pt * var(--rr-section-gap-mul, 1));
+    }
     /* Header: name + single contact line (reference resume layout) */
     .header {
-      margin-bottom: calc(11pt * var(--rr-section-gap-mul, 1));
       padding-bottom: 8pt;
       border-bottom: 0.75pt solid var(--rr-border);
     }
@@ -45,8 +54,8 @@
     .contact-line a { color: var(--rr-link); font-weight: 400; }
 
     .section {
-      margin-bottom: calc(11pt * var(--rr-section-gap-mul, 1));
-      page-break-inside: avoid;
+      break-inside: auto;
+      page-break-inside: auto;
     }
     .section-title {
       font-size: 10.5pt;
@@ -68,8 +77,12 @@
     /* Experience / project entries — no left rail bullets */
     .entry {
       margin-bottom: 10pt;
+      break-inside: avoid;
       page-break-inside: avoid;
       padding-left: 0;
+    }
+    .entry:last-child {
+      margin-bottom: 0;
     }
     .entry::before { display: none; }
     .exp-title {
@@ -150,6 +163,11 @@
       color: var(--rr-ink);
       margin-bottom: 4pt;
       text-align: left;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+    .skill-line:last-child {
+      margin-bottom: 0;
     }
     .skill-line .lab {
       font-weight: 700;
@@ -159,6 +177,7 @@
 </head>
 <body class="rr-resume">
 
+<div class="resume-doc">
   <header class="header">
     <div class="name">{{personal.firstName}} {{personal.lastName}}</div>
     {{#if personal.headline}}<div class="headline">{{personal.headline}}</div>{{/if}}
@@ -172,6 +191,7 @@
     </div>
   </header>
 
+  <div class="resume-flow">
   {{#each sectionOrder}}
     {{#if (eq this "summary")}}
       {{#if @root.personal.summary}}
@@ -264,6 +284,8 @@
       {{/if}}
     {{/if}}
   {{/each}}
+  </div>
+</div>
 
 </body>
 </html>

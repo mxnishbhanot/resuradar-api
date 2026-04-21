@@ -1,20 +1,25 @@
 /**
  * Single source of truth for PDF page geometry (Playwright) and HTML preview alignment.
- * Templates keep outer chrome minimal; Playwright margins plus injected body padding
- * define the final inset from the physical page edge.
+ * Inner padding is folded into Playwright margins so the same inset repeats on every
+ * printed page (body padding does not repeat at page breaks in paged media).
  */
 
 export const PAGE_WIDTH_MM = 210;
 export const PAGE_HEIGHT_MM = 297;
-/** Playwright PDF page margins — slightly generous so content does not feel edge‑locked. */
+/** Legacy base margin (before inner pad); kept for naming clarity in docs. */
 export const MARGIN_MM = 14;
 
-export const CONTENT_WIDTH_MM = PAGE_WIDTH_MM - 2 * MARGIN_MM;
-export const CONTENT_HEIGHT_MM = PAGE_HEIGHT_MM - 2 * MARGIN_MM;
-
-/** Padding inside the content box (within max-width), so text clears the printable inset. */
+/** Desired inset inside the physical page for text (folded into Playwright margins). */
 export const INNER_PAD_X_MM = 5;
 export const INNER_PAD_Y_MM = 5;
+
+/** Playwright `page.pdf` margin per edge = base margin + inner pad (same visual as old page 1). */
+export const PDF_MARGIN_X_MM = MARGIN_MM + INNER_PAD_X_MM;
+export const PDF_MARGIN_Y_MM = MARGIN_MM + INNER_PAD_Y_MM;
+
+/** Body max dimensions inside the PDF margin box (no body padding — margins handle inset). */
+export const CONTENT_WIDTH_MM = PAGE_WIDTH_MM - 2 * PDF_MARGIN_X_MM;
+export const CONTENT_HEIGHT_MM = PAGE_HEIGHT_MM - 2 * PDF_MARGIN_Y_MM;
 
 /** Default PDF palette (ATS-style: near-black on white, standard resume blue links). */
 export const STANDARD_RESUME_TOKENS = {
@@ -38,10 +43,11 @@ export const STANDARD_RESUME_TOKENS = {
   },
 };
 
-/** Playwright page.pdf margin option */
+/** Playwright page.pdf margin option (includes former body inner padding). */
 export function getPdfMarginCss() {
-  const m = `${MARGIN_MM}mm`;
-  return { top: m, bottom: m, left: m, right: m };
+  const x = `${PDF_MARGIN_X_MM}mm`;
+  const y = `${PDF_MARGIN_Y_MM}mm`;
+  return { top: y, bottom: y, left: x, right: x };
 }
 
 /** Matches standard single-column resume: summary → jobs → projects → school → skills. */
@@ -77,11 +83,14 @@ export function normalizeLayout(raw) {
     typeof r.sectionGap === "number" && r.sectionGap > 0 ? r.sectionGap : 1;
   const lineHeight =
     typeof r.lineHeight === "number" && r.lineHeight > 0 ? r.lineHeight : 1;
+  let targetPageCount = r.targetPageCount;
+  if (targetPageCount !== 1 && targetPageCount !== 2) targetPageCount = undefined;
   return {
     layoutVersion: 1,
     globalScale: Math.min(1.25, Math.max(0.65, scale)),
     sectionGap: Math.min(1.5, Math.max(0.7, sectionGap)),
     lineHeight: Math.min(1.35, Math.max(0.95, lineHeight)),
+    ...(targetPageCount === 1 || targetPageCount === 2 ? { targetPageCount } : {}),
   };
 }
 
@@ -143,7 +152,8 @@ export function buildPrintSpecStyleBlock(layout, appearance) {
   --rr-content-width-mm: ${CONTENT_WIDTH_MM};
   --rr-content-height-mm: ${CONTENT_HEIGHT_MM};
   --rr-page-height-mm: ${PAGE_HEIGHT_MM};
-  --rr-margin-mm: ${MARGIN_MM};
+  --rr-pdf-margin-x-mm: ${PDF_MARGIN_X_MM};
+  --rr-pdf-margin-y-mm: ${PDF_MARGIN_Y_MM};
   --rr-resume-scale: ${L.globalScale};
   --rr-section-gap-mul: ${L.sectionGap};
   --rr-line-height-mul: ${L.lineHeight};
@@ -157,12 +167,10 @@ export function buildPrintSpecStyleBlock(layout, appearance) {
   --rr-code-bg: ${codeBg};
   --rr-heading-weight: ${A.headingWeight};
   --rr-link-decoration: ${linkDeco};
-  --rr-inner-pad-x: ${INNER_PAD_X_MM}mm;
-  --rr-inner-pad-y: ${INNER_PAD_Y_MM}mm;
 }
 body.rr-resume {
   font-family: 'Carlito', Calibri, 'Segoe UI', Arial, Helvetica, sans-serif !important;
-  padding: var(--rr-inner-pad-y) var(--rr-inner-pad-x) !important;
+  padding: 0 !important;
   max-width: ${CONTENT_WIDTH_MM}mm !important;
   width: 100% !important;
   margin: 0 auto !important;

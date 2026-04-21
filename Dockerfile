@@ -1,21 +1,18 @@
-# Base Node image
-FROM node:20-bookworm
+# Official image already includes Chromium + OS deps for Playwright.
+# Keep the tag in sync with the resolved `playwright` version in package-lock.json
+# (https://playwright.dev/docs/docker#image-tags).
+FROM mcr.microsoft.com/playwright:v1.57.0-noble
 
-# Install Playwright browsers & dependencies
-RUN npx -y playwright@1.57.0 install --with-deps
-
-# Set working directory
 WORKDIR /app
 
-# Install dependencies
-COPY package*.json ./
-RUN npm install
+# Browsers are baked into the base image; avoid re-downloading during npm install.
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
-# Copy project files
+COPY package*.json ./
+RUN npm ci --omit=dev
+
 COPY . .
 
-# Render uses PORT=10000
 EXPOSE 10000
 
-# Start your server
 CMD ["npm", "start"]

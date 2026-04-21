@@ -82,6 +82,7 @@ const customResumeSchema = new mongoose.Schema({
               globalScale: { type: Number },
               sectionGap: { type: Number },
               lineHeight: { type: Number },
+              targetPageCount: { type: Number, enum: [1, 2] },
             },
             { _id: false }
           ),
