@@ -3,6 +3,7 @@ import { jsonrepair } from "jsonrepair";
 import dotenv from "dotenv";
 import { buildAiMetrics, normalizeResumeText, summarizeJobDescription } from "./aiPromptOptimizer.js";
 import {
+  AI_ANALYSIS_RETRY_TOKEN_CAP,
   AI_MAX_OUTPUT_TOKENS,
   resumeAnalysisResponseSchema,
   resumeJobMatchResponseSchema,
@@ -118,6 +119,32 @@ const extractJsonText = (response) =>
   response?.response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() ||
   (typeof response?.text === "string" ? response.text.trim() : "") ||
   "";
+
+const getFirstCandidateFinishReason = (response) =>
+  response?.candidates?.[0]?.finishReason ?? response?.response?.candidates?.[0]?.finishReason ?? "";
+
+const isLikelyMaxTokensFinish = (reason) => String(reason || "").includes("MAX_TOKENS");
+
+/**
+ * Gemini schemaless completions often use camelCase; map to the snake_case shape the app expects.
+ * @param {Record<string, unknown>} parsed
+ */
+const coerceFreePremiumFeedbackShape = (parsed) => {
+  if (!parsed || typeof parsed !== "object") return parsed;
+  const out = { ...parsed };
+  if (!out.free_feedback && out.freeFeedback && typeof out.freeFeedback === "object") {
+    out.free_feedback = out.freeFeedback;
+  }
+  if (!out.premium_feedback && out.premiumFeedback && typeof out.premiumFeedback === "object") {
+    out.premium_feedback = out.premiumFeedback;
+  }
+  return out;
+};
+
+const analysisRetryTokenCap = () => {
+  const n = Number(process.env.AI_ANALYSIS_RETRY_TOKEN_CAP || AI_ANALYSIS_RETRY_TOKEN_CAP);
+  return Number.isFinite(n) && n > 0 ? n : AI_ANALYSIS_RETRY_TOKEN_CAP;
+};
 
 /** First top-level `{ ... }` using brace depth (strings + escapes), not greedy last-`}`. */
 const extractFirstJsonObject = (str) => {
@@ -308,17 +335,47 @@ ${normalizedResume}
   const startedAt = Date.now();
 
   try {
-    const response = await generateStructuredJson({
-      model,
-      prompt,
-      responseSchema: resumeAnalysisResponseSchema,
-      maxOutputTokens: AI_MAX_OUTPUT_TOKENS.resumeAnalysis,
-    });
+    const tokenCap = analysisRetryTokenCap();
+    let maxOutputTokens = AI_MAX_OUTPUT_TOKENS.resumeAnalysis;
 
-    const text = extractJsonText(response);
-    if (!text) throw new Error("AI returned no text");
+    const callModel = async (tokens) => {
+      const response = await generateStructuredJson({
+        model,
+        prompt,
+        responseSchema: resumeAnalysisResponseSchema,
+        maxOutputTokens: tokens,
+      });
+      const responseText = extractJsonText(response);
+      if (!responseText) throw new Error("AI returned no text");
+      const finishReason = getFirstCandidateFinishReason(response);
+      const parsedJson = coerceFreePremiumFeedbackShape(parseJsonResponse(responseText));
+      return { responseText, finishReason, parsedJson };
+    };
 
-    const parsed = parseJsonResponse(text);
+    const resumeAnalysisIncomplete = (p) => {
+      if (!p?.free_feedback || !p?.premium_feedback) return true;
+      const fb = p.free_feedback;
+      return typeof fb.score_explanation !== "string" || !String(fb.score_explanation).trim();
+    };
+
+    let { responseText: text, finishReason, parsedJson: parsed } = await callModel(maxOutputTokens);
+
+    if (
+      (isLikelyMaxTokensFinish(finishReason) || resumeAnalysisIncomplete(parsed)) &&
+      maxOutputTokens < tokenCap
+    ) {
+      const bumped = Math.min(tokenCap, Math.max(maxOutputTokens * 2, 8192));
+      if (bumped > maxOutputTokens) {
+        logger.warn("Retrying resume analysis (truncated or incomplete JSON)", {
+          finishReason,
+          previousMax: maxOutputTokens,
+          bumped,
+        });
+        maxOutputTokens = bumped;
+        ({ responseText: text, finishReason, parsedJson: parsed } = await callModel(maxOutputTokens));
+      }
+    }
+
     let score = typeof parsed.score === "string" ? parseFloat(parsed.score) : parsed.score;
     if (Number.isNaN(score) || score < 0 || score > 100) {
       throw new Error(`Invalid score: ${parsed.score}`);
@@ -477,17 +534,43 @@ ${normalizedResume}
   const startedAt = Date.now();
 
   try {
-    const response = await generateStructuredJson({
-      model,
-      prompt,
-      responseSchema: resumeJobMatchResponseSchema,
-      maxOutputTokens: AI_MAX_OUTPUT_TOKENS.resumeJobMatch,
-    });
+    const tokenCap = analysisRetryTokenCap();
+    let maxOutputTokens = AI_MAX_OUTPUT_TOKENS.resumeJobMatch;
 
-    const text = extractJsonText(response);
-    if (!text) throw new Error("AI returned no text");
+    const callModel = async (tokens) => {
+      const response = await generateStructuredJson({
+        model,
+        prompt,
+        responseSchema: resumeJobMatchResponseSchema,
+        maxOutputTokens: tokens,
+      });
+      const responseText = extractJsonText(response);
+      if (!responseText) throw new Error("AI returned no text");
+      const finishReason = getFirstCandidateFinishReason(response);
+      const parsedJson = coerceFreePremiumFeedbackShape(parseJsonResponse(responseText));
+      return { responseText, finishReason, parsedJson };
+    };
 
-    const parsed = parseJsonResponse(text);
+    const jobMatchIncomplete = (p) => !p?.free_feedback || !p?.premium_feedback;
+
+    let { responseText: text, finishReason, parsedJson: parsed } = await callModel(maxOutputTokens);
+
+    if (
+      (isLikelyMaxTokensFinish(finishReason) || jobMatchIncomplete(parsed)) &&
+      maxOutputTokens < tokenCap
+    ) {
+      const bumped = Math.min(tokenCap, Math.max(maxOutputTokens * 2, 8192));
+      if (bumped > maxOutputTokens) {
+        logger.warn("Retrying resume-job match (truncated or incomplete JSON)", {
+          finishReason,
+          previousMax: maxOutputTokens,
+          bumped,
+        });
+        maxOutputTokens = bumped;
+        ({ responseText: text, finishReason, parsedJson: parsed } = await callModel(maxOutputTokens));
+      }
+    }
+
     if (!parsed.free_feedback || !parsed.premium_feedback) {
       throw new Error("Missing required AI sections");
     }

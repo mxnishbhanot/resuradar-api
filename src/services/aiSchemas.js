@@ -2,10 +2,14 @@ import { Type } from "@google/genai";
 
 /** Max output tokens per flow (caps latency and cost for verbose completions). */
 export const AI_MAX_OUTPUT_TOKENS = {
-  resumeAnalysis: 4096,
-  resumeJobMatch: 4096,
+  /** Structured resume feedback is verbose; 4096 was truncating JSON (MAX_TOKENS → incomplete parse). */
+  resumeAnalysis: 8192,
+  resumeJobMatch: 8192,
   resumeParse: 8192,
 };
+
+/** Upper bound when retrying analysis after MAX_TOKENS or incomplete JSON. */
+export const AI_ANALYSIS_RETRY_TOKEN_CAP = 16384;
 
 const resumeScoreFactorSchema = {
   type: Type.OBJECT,
