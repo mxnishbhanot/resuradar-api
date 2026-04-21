@@ -20,6 +20,24 @@ const resumeScoreFactorSchema = {
   },
 };
 
+/** Before/after line rewrites — used for resume premium rewrites and job-match suggested_rewrites. */
+const rewritePairSchema = {
+  type: Type.OBJECT,
+  required: ["original", "suggestion"],
+  properties: {
+    original: {
+      type: Type.STRING,
+      description:
+        "Exact or lightly trimmed quote from the resume (one bullet or sentence). Must appear in the resume text.",
+    },
+    suggestion: {
+      type: Type.STRING,
+      description:
+        "Improved replacement. Do not invent metrics or percentages not in the resume; use placeholders like [metric] or say what to measure.",
+    },
+  },
+};
+
 export const resumeAnalysisResponseSchema = {
   type: Type.OBJECT,
   required: ["score", "free_feedback", "premium_feedback"],
@@ -29,9 +47,26 @@ export const resumeAnalysisResponseSchema = {
       type: Type.OBJECT,
       required: ["strengths", "improvements", "summary", "score_explanation"],
       properties: {
-        strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
-        improvements: { type: Type.ARRAY, items: { type: Type.STRING } },
-        summary: { type: Type.STRING },
+        strengths: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.STRING,
+            description:
+              "One strength anchored to the resume (e.g. Experience → Company: …). No generic filler unless tied to evidence on the document.",
+          },
+        },
+        improvements: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.STRING,
+            description:
+              "One concrete improvement naming section or role (e.g. Projects → X: …). Say what to change; avoid invented numbers.",
+          },
+        },
+        summary: {
+          type: Type.STRING,
+          description: "Short executive summary grounded in this resume only; no markdown",
+        },
         score_explanation: {
           type: Type.STRING,
           description: "1-3 sentences explaining why this score was chosen; plain language, no markdown",
@@ -39,7 +74,7 @@ export const resumeAnalysisResponseSchema = {
         score_factors: {
           type: Type.ARRAY,
           items: resumeScoreFactorSchema,
-          description: "0-5 key drivers of the score (optional but preferred)",
+          description: "2-5 key drivers of the score; each note must align with the numeric score",
         },
       },
     },
@@ -47,22 +82,28 @@ export const resumeAnalysisResponseSchema = {
       type: Type.OBJECT,
       required: ["detailed_suggestions", "rewrites", "portfolio_tips", "keywords", "professional_level"],
       properties: {
-        detailed_suggestions: { type: Type.ARRAY, items: { type: Type.STRING } },
-        rewrites: { type: Type.ARRAY, items: { type: Type.STRING } },
+        detailed_suggestions: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.STRING,
+            description:
+              "One complete actionable suggestion (roughly 80-800 characters). Never split one suggestion across multiple array entries.",
+          },
+        },
+        rewrites: { type: Type.ARRAY, items: rewritePairSchema },
         portfolio_tips: { type: Type.ARRAY, items: { type: Type.STRING } },
-        keywords: { type: Type.ARRAY, items: { type: Type.STRING } },
-        professional_level: { type: Type.STRING },
+        keywords: {
+          type: Type.ARRAY,
+          items: { type: Type.STRING },
+          description: "ATS-relevant terms supported by or reasonably adjacent to the resume; empty array if none",
+        },
+        professional_level: {
+          type: Type.STRING,
+          description:
+            "Short phrase for how the resume reads (e.g. Mid-level full-stack engineer); not a hiring guarantee",
+        },
       },
     },
-  },
-};
-
-const rewritePairSchema = {
-  type: Type.OBJECT,
-  required: ["original", "suggestion"],
-  properties: {
-    original: { type: Type.STRING },
-    suggestion: { type: Type.STRING },
   },
 };
 
@@ -74,11 +115,26 @@ export const resumeJobMatchResponseSchema = {
       type: Type.OBJECT,
       required: ["match_score", "match_level", "summary", "strengths", "gaps"],
       properties: {
-        match_score: { type: Type.NUMBER },
-        match_level: { type: Type.STRING },
-        summary: { type: Type.STRING },
-        strengths: { type: Type.ARRAY, items: { type: Type.STRING } },
-        gaps: { type: Type.ARRAY, items: { type: Type.STRING } },
+        match_score: { type: Type.NUMBER, description: "0-100 alignment of resume to this job description" },
+        match_level: { type: Type.STRING, description: "Short label aligned with match_score (e.g. Good, Fair)" },
+        summary: {
+          type: Type.STRING,
+          description: "2-4 sentences grounded in resume + JD; no markdown",
+        },
+        strengths: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.STRING,
+            description: "Overlap or evidence tying resume to JD; avoid generic praise",
+          },
+        },
+        gaps: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.STRING,
+            description: "Concrete gap vs JD (skill, proof, seniority); avoid vague filler",
+          },
+        },
       },
     },
     premium_feedback: {
@@ -89,23 +145,39 @@ export const resumeJobMatchResponseSchema = {
           type: Type.OBJECT,
           required: ["total_keywords_in_jd", "matched_keywords", "missing_keywords"],
           properties: {
-            total_keywords_in_jd: { type: Type.NUMBER },
-            matched_keywords: { type: Type.NUMBER },
-            missing_keywords: { type: Type.ARRAY, items: { type: Type.STRING } },
+            total_keywords_in_jd: {
+              type: Type.NUMBER,
+              description: "Count of salient role keywords extracted from the job summary",
+            },
+            matched_keywords: {
+              type: Type.NUMBER,
+              description: "How many of those appear or are clearly implied on the resume; must be <= total",
+            },
+            missing_keywords: {
+              type: Type.ARRAY,
+              items: { type: Type.STRING },
+              description: "JD terms the resume does not substantiate; empty array if none",
+            },
           },
         },
         role_fit_breakdown: {
           type: Type.OBJECT,
           required: ["technical_skills_fit", "experience_fit", "education_fit", "soft_skills_fit", "overall_fit"],
           properties: {
-            technical_skills_fit: { type: Type.NUMBER },
-            experience_fit: { type: Type.NUMBER },
-            education_fit: { type: Type.NUMBER },
-            soft_skills_fit: { type: Type.NUMBER },
-            overall_fit: { type: Type.NUMBER },
+            technical_skills_fit: { type: Type.NUMBER, description: "0-100 vs JD technical needs" },
+            experience_fit: { type: Type.NUMBER, description: "0-100 vs JD scope/seniority" },
+            education_fit: { type: Type.NUMBER, description: "0-100 vs JD education signals" },
+            soft_skills_fit: { type: Type.NUMBER, description: "0-100 vs JD collaboration/communication cues" },
+            overall_fit: { type: Type.NUMBER, description: "0-100 holistic; should align with free_feedback.match_score" },
           },
         },
-        recommendations: { type: Type.ARRAY, items: { type: Type.STRING } },
+        recommendations: {
+          type: Type.ARRAY,
+          items: {
+            type: Type.STRING,
+            description: "One complete actionable sentence per item; JD-specific where possible",
+          },
+        },
         suggested_rewrites: { type: Type.ARRAY, items: rewritePairSchema },
       },
     },

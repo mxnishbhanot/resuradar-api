@@ -8,6 +8,11 @@ import {
   resumeParseResponseSchema,
 } from "./aiSchemas.js";
 import { aiResponseCacheGet, aiResponseCacheKey, aiResponseCacheSet } from "./aiResponseCache.js";
+import {
+  normalizePremiumFeedback,
+  normalizeJobMatchPremiumFeedback,
+  normalizeJobMatchFreeFeedback,
+} from "./aiResumeAnalysisPostProcess.js";
 import { logger } from "../utils/logger.js";
 
 dotenv.config();
@@ -183,7 +188,7 @@ export async function analyzeResume(resumeText) {
   const detectedField = detectField(normalizedResume);
   const model = getModel("analysis");
 
-  const cacheKey = aiResponseCacheKey(["resume-analysis", model, normalizedResume]);
+  const cacheKey = aiResponseCacheKey(["resume-analysis", "v3-enterprise", model, normalizedResume]);
   const cached = aiResponseCacheGet(cacheKey);
   if (cached) {
     logger.info(
@@ -201,14 +206,22 @@ export async function analyzeResume(resumeText) {
   }
 
   const prompt = `
-Analyze this ${detectedField} resume and return JSON only.
+You are an expert resume coach. Analyze this ${detectedField} resume and return JSON only.
+Ground every point in the resume text below—no generic career advice unless it clearly applies to what is written.
 
-Requirements:
-- concise but accurate
-- score must be 0-100
-- score_explanation: 1-3 sentences in plain language on why that score fits this resume (must align with the number)
-- score_factors: optional; up to 5 items; each note one sentence; impact must be exactly high, medium, or low
-- no markdown
+Rules:
+- score: integer 0-100 (holistic resume quality for clarity, impact, and credibility—not a hiring prediction)
+- score_explanation: 1-3 sentences; must match the score; plain language; no markdown
+- score_factors: 2 to 5 objects; impact must be exactly high, medium, or low; each note one sentence tied to this resume
+- summary: 2-4 sentences; only facts and gaps visible in this resume; no markdown
+- strengths: 4 to 6 items; each names where on the resume (section/company/project) and why it helps; no vague praise
+- improvements: 4 to 6 items; each names where to edit and one concrete next step; do not invent metrics or employers
+- detailed_suggestions: 4 to 8 items; EACH item is one complete suggestion (about 80-800 characters); never split one idea across multiple strings
+- rewrites: 3 to 6 objects; original must quote or lightly trim a real line/bullet from the resume; suggestion improves it without inventing numbers—use [metric] placeholders if a number would help
+- portfolio_tips: 3 to 5 actionable items tied to this candidate's skills/projects when possible
+- keywords: only terms relevant to this resume or obvious gaps for the role family; if none add value, use an empty array []
+- professional_level: one short phrase describing how the resume reads (e.g. "Mid-level full-stack engineer")—not a job offer or title guarantee
+- no markdown anywhere
 
 Schema:
 {
@@ -222,7 +235,7 @@ Schema:
   },
   "premium_feedback": {
     "detailed_suggestions": [string],
-    "rewrites": [string],
+    "rewrites": [ { "original": string, "suggestion": string } ],
     "portfolio_tips": [string],
     "keywords": [string],
     "professional_level": string
@@ -288,7 +301,7 @@ ${normalizedResume}
       detected_field: detectedField,
       score,
       free_feedback,
-      premium_feedback: parsed.premium_feedback,
+      premium_feedback: normalizePremiumFeedback(parsed.premium_feedback),
     };
 
     aiResponseCacheSet(cacheKey, result);
@@ -321,7 +334,13 @@ export async function analyzeResumeToJob(resumeText, jobDescription) {
   const detectedField = resumeField !== "General" ? resumeField : detectField(compactJobDescription);
   const model = getModel("match");
 
-  const cacheKey = aiResponseCacheKey(["resume-job-match", model, normalizedResume, compactJobDescription]);
+  const cacheKey = aiResponseCacheKey([
+    "resume-job-match",
+    "v2-enterprise",
+    model,
+    normalizedResume,
+    compactJobDescription,
+  ]);
   const cached = aiResponseCacheGet(cacheKey);
   if (cached) {
     logger.info(
@@ -339,12 +358,20 @@ export async function analyzeResumeToJob(resumeText, jobDescription) {
   }
 
   const prompt = `
-Compare this resume to the job summary and return JSON only.
+You are an expert recruiter and resume coach. Compare this resume to the job summary and return JSON only.
+Ground every point in the two texts—no invented employers, tools, or metrics that do not appear or clearly follow from the resume and job summary.
 
 Rules:
-- match_score must be 0-100
+- match_score: integer 0-100 (alignment of resume to this JD—not a hiring decision)
+- match_level: short label consistent with the score (e.g. Strong / Good / Fair / Weak)
+- summary: 2-4 sentences; what fits, what is missing, and priority fix; no markdown
+- strengths: 3 to 6 items; each must cite resume + JD overlap (skills, titles, domains) when possible
+- gaps: 3 to 6 items; each must name a concrete gap vs the JD (missing keyword, missing proof, seniority signal); no vague filler
+- keyword_analysis: realistic counts from the job summary vocabulary; missing_keywords only for terms in/near the JD the resume does not show; matched_keywords must not exceed total_keywords_in_jd
+- role_fit_breakdown: integers 0-100 per dimension; must align with match_score overall
+- recommendations: 4 to 10 items; each one complete actionable sentence; never split one recommendation across multiple array strings
+- suggested_rewrites: 3 to 6 pairs; original must quote or lightly trim a real resume line; suggestion improves JD alignment without inventing numbers—use [metric] placeholders if needed
 - no markdown
-- keep recommendations specific
 
 Schema:
 {
@@ -412,18 +439,19 @@ ${normalizedResume}
     }
 
     score = Math.round(score);
-    parsed.premium_feedback.role_fit_breakdown = parsed.premium_feedback.role_fit_breakdown || {};
-    parsed.premium_feedback.role_fit_breakdown.overall_fit = score;
+
+    const freeNorm = normalizeJobMatchFreeFeedback(parsed.free_feedback);
+    const premiumNorm = normalizeJobMatchPremiumFeedback(parsed.premium_feedback, score);
 
     const result = {
       detected_field: detectedField,
       match_score: score,
-      match_level: parsed.free_feedback.match_level,
+      match_level: freeNorm.match_level,
       free_feedback: {
-        ...parsed.free_feedback,
+        ...freeNorm,
         match_score: score,
       },
-      premium_feedback: parsed.premium_feedback,
+      premium_feedback: premiumNorm,
     };
 
     aiResponseCacheSet(cacheKey, result);
