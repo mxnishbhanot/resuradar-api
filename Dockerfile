@@ -9,7 +9,9 @@ WORKDIR /app
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
 COPY package*.json ./
-RUN npm ci --omit=dev
+# `npm ci` fails on Linux (Render) when the lock omits optional-peer subtrees
+# (e.g. mongodb → optional gcp-metadata → gaxios@5) that Windows-generated locks can skip.
+RUN npm install --omit=dev --no-audit --no-fund
 
 COPY . .
 
