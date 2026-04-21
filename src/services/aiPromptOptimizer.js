@@ -119,7 +119,7 @@ export const summarizeJobDescription = (jobDescription) => {
     .slice(0, MAX_JOB_DESCRIPTION_CHARS);
 
   const value = summary || trimToBudget(lines, MAX_JOB_DESCRIPTION_CHARS);
-  cache.set(key, value);
+  jdSummaryCache.set(key, value);
   return value;
 };
 

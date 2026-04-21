@@ -1,4 +1,5 @@
 import { GoogleGenAI } from "@google/genai";
+import { jsonrepair } from "jsonrepair";
 import dotenv from "dotenv";
 import { buildAiMetrics, normalizeResumeText, summarizeJobDescription } from "./aiPromptOptimizer.js";
 import {
@@ -118,17 +119,74 @@ const extractJsonText = (response) =>
   (typeof response?.text === "string" ? response.text.trim() : "") ||
   "";
 
+/** First top-level `{ ... }` using brace depth (strings + escapes), not greedy last-`}`. */
+const extractFirstJsonObject = (str) => {
+  const s = String(str || "");
+  const start = s.indexOf("{");
+  if (start === -1) return null;
+  let depth = 0;
+  let inString = false;
+  let escape = false;
+  for (let i = start; i < s.length; i++) {
+    const c = s[i];
+    if (escape) {
+      escape = false;
+      continue;
+    }
+    if (inString) {
+      if (c === "\\") {
+        escape = true;
+        continue;
+      }
+      if (c === '"') {
+        inString = false;
+        continue;
+      }
+      continue;
+    }
+    if (c === '"') {
+      inString = true;
+      continue;
+    }
+    if (c === "{") depth++;
+    else if (c === "}") {
+      depth--;
+      if (depth === 0) return s.slice(start, i + 1);
+    }
+  }
+  return null;
+};
+
 const parseJsonResponse = (text) => {
   const trimmed = String(text || "").trim();
+  const tryParse = (raw) => {
+    const s = String(raw || "").trim();
+    if (!s) throw new Error("Empty JSON");
+    try {
+      return JSON.parse(s);
+    } catch {
+      return JSON.parse(jsonrepair(s));
+    }
+  };
+
   try {
-    return JSON.parse(trimmed);
+    return tryParse(trimmed);
   } catch {
     /* fall through */
   }
-  const cleanedText = trimmed.replace(/```json\s*/g, "").replace(/```\s*/g, "");
-  const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
-  if (!jsonMatch) throw new Error("No valid JSON found in AI response");
-  return JSON.parse(jsonMatch[0]);
+  const cleanedText = trimmed.replace(/```json\s*/gi, "").replace(/```\s*/g, "").trim();
+  try {
+    return tryParse(cleanedText);
+  } catch {
+    /* fall through */
+  }
+  const blob = extractFirstJsonObject(cleanedText) || extractFirstJsonObject(trimmed);
+  if (!blob) throw new Error("No valid JSON found in AI response");
+  try {
+    return tryParse(blob);
+  } catch (e) {
+    throw new Error(`No valid JSON found in AI response: ${e.message}`);
+  }
 };
 
 const detectField = (text) => {
@@ -222,6 +280,7 @@ Rules:
 - keywords: only terms relevant to this resume or obvious gaps for the role family; if none add value, use an empty array []
 - professional_level: one short phrase describing how the resume reads (e.g. "Mid-level full-stack engineer")—not a job offer or title guarantee
 - no markdown anywhere
+- Output must be one valid JSON object only: inside string values, escape any double-quote as \\" and use \\n for line breaks (never break a JSON string across physical lines)
 
 Schema:
 {
@@ -372,6 +431,7 @@ Rules:
 - recommendations: 4 to 10 items; each one complete actionable sentence; never split one recommendation across multiple array strings
 - suggested_rewrites: 3 to 6 pairs; original must quote or lightly trim a real resume line; suggestion improves JD alignment without inventing numbers—use [metric] placeholders if needed
 - no markdown
+- One valid JSON object only: escape internal double-quotes in strings as \\" and use \\n for newlines (no raw line breaks inside strings)
 
 Schema:
 {
