@@ -4,7 +4,9 @@
   <meta charset="UTF-8">
   <title>{{personal.firstName}} {{personal.lastName}}</title>
   <style>
-    @page { margin: 0; size: A4; }
+    /* Page geometry is owned by Playwright's page.pdf({ format, margin }).
+       Do not set @page { margin } here — conflicting CSS margins were the
+       source of first-page/subsequent-page margin drift. */
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-size: 10.5pt;
