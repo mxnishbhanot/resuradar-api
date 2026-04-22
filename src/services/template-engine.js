@@ -5,21 +5,23 @@ import {
   appendDesignerBridge,
   buildPrintSpecStyleBlock,
   normalizeAppearance,
+  normalizeHiddenSections,
   normalizeLayout,
   normalizeSectionOrder,
+  resolveTemplate,
 } from "../config/print-spec.js";
 
-/** Single standard layout on disk; legacy `templateName` values are ignored. */
-const RESUME_LAYOUT_SLUG = "modern";
+/** Templates share one hbs; see print-spec TEMPLATES registry for per-template fonts/accents. */
+const SHARED_HBS_SLUG = "modern";
 
 /**
  * @param {object} resumeData
- * @param {string} [_templateName] legacy slug (ignored; always uses standard layout)
+ * @param {string} [templateName] registry id (e.g. 'modern', 'serif'); unknown ids fall back to 'modern'
  * @param {{ includeDesignerBridge?: boolean }} [options]
  */
-export const renderTemplateHTML = (resumeData, _templateName, options = {}) => {
+export const renderTemplateHTML = (resumeData, templateName, options = {}) => {
   const cleanData = JSON.parse(JSON.stringify(resumeData));
-  const templateName = RESUME_LAYOUT_SLUG;
+  const templateId = resolveTemplate(templateName).id;
 
   handlebars.registerHelper("formatDate", function (dateString) {
     if (!dateString) return "";
@@ -77,9 +79,12 @@ export const renderTemplateHTML = (resumeData, _templateName, options = {}) => {
     : {};
   const layout = normalizeLayout(ts.layout);
   const appearance = normalizeAppearance(ts.appearance);
-  const sectionOrder = normalizeSectionOrder(ts.sectionOrder, templateName);
+  const hidden = new Set(normalizeHiddenSections(ts.hiddenSections));
+  const sectionOrder = normalizeSectionOrder(ts.sectionOrder, templateId).filter(
+    (k) => !hidden.has(k),
+  );
 
-  const html = fs.readFileSync(`src/config/templates/${templateName}/template.hbs`, "utf8");
+  const html = fs.readFileSync(`src/config/templates/${SHARED_HBS_SLUG}/template.hbs`, "utf8");
 
   const compile = handlebars.compile(html);
 
@@ -91,7 +96,7 @@ export const renderTemplateHTML = (resumeData, _templateName, options = {}) => {
     sectionOrder,
   });
 
-  const inject = buildPrintSpecStyleBlock(layout, appearance);
+  const inject = buildPrintSpecStyleBlock(layout, appearance, templateId);
   out = out.replace(/<head[^>]*>/i, (m) => `${m}${inject}`);
 
   if (options.includeDesignerBridge !== false) {

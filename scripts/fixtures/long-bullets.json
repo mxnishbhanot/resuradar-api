@@ -1,0 +1,70 @@
+{
+  "_id": null,
+  "personal": {
+    "firstName": "Katherine",
+    "lastName": "Johnson",
+    "email": "katherine@example.com",
+    "phone": "+1 555 606 7070",
+    "headline": "Trajectory & Flight Dynamics",
+    "location": "Hampton, VA",
+    "linkedin": "linkedin.com/in/katherine",
+    "github": "",
+    "portfolioUrl": "",
+    "summary": "Trajectory engineer with a focus on numerically stable orbital mechanics and verification of critical mission software. Strong preference for documented, auditable derivations over clever shortcuts."
+  },
+  "educations": [
+    {
+      "id": "e1",
+      "institution": "West Virginia State College",
+      "degree": "B.S. Mathematics & French",
+      "major": "",
+      "startDate": "1933-09-01",
+      "endDate": "1937-06-01",
+      "isCurrent": false,
+      "gpa": "",
+      "bullets": []
+    }
+  ],
+  "experiences": [
+    {
+      "id": "x1",
+      "title": "Senior Trajectory Engineer",
+      "company": "Langley Research Center",
+      "role": "Orbital Mechanics",
+      "startDate": "2015-01-01",
+      "endDate": "",
+      "isCurrent": true,
+      "bullets": [
+        "Derived and hand-verified the orbital insertion and re-entry trajectories for three consecutive crewed missions, each of which completed without any in-flight trajectory correction beyond nominal planned burns.",
+        "Authored the mission-critical verification procedures that every future on-board flight computer output is checked against; the procedure catalog has been used without modification on four subsequent vehicles over the last eight years of the program.",
+        "Led a three-engineer sub-team responsible for cross-checking thirty-plus pages of trajectory equations against independent hand calculations, catching two numerically unstable intermediate steps before the equations were committed to a flight computer."
+      ]
+    },
+    {
+      "id": "x2",
+      "title": "Computer (Research Mathematician)",
+      "company": "NACA",
+      "role": "",
+      "startDate": "2009-06-01",
+      "endDate": "2014-12-01",
+      "isCurrent": false,
+      "bullets": [
+        "Produced wind-tunnel data reductions and flight-research computations supporting nine separate aerodynamic research programs; work was delivered on the schedule negotiated with the principal investigators in every reporting period.",
+        "Trained four junior mathematicians on the internal computation procedures and the quality-assurance checklist; two of the four went on to lead trajectory sub-teams within three years of joining.",
+        "Identified and corrected a persistent sign error in a widely circulated internal computation template; the corrected template has been the departmental standard since."
+      ]
+    }
+  ],
+  "projects": [],
+  "skills": [
+    { "id": "s1", "name": "Mathematics", "skills": ["Orbital mechanics", "Numerical analysis", "Linear algebra"] },
+    { "id": "s2", "name": "Methods", "skills": ["Hand verification", "Monte Carlo", "Perturbation analysis"] }
+  ],
+  "theme": "modern",
+  "colorScheme": "light",
+  "templateSettings": {
+    "sectionOrder": ["summary", "experience", "projects", "education", "skills"],
+    "layout": { "layoutVersion": 1, "globalScale": 1, "sectionGap": 1, "lineHeight": 1 },
+    "appearance": { "appearanceVersion": 1, "colorMode": "light", "headingWeight": 700, "underlineLinks": false, "bodyColor": null, "headingColor": null }
+  }
+}

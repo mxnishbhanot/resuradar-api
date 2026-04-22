@@ -5,185 +5,60 @@
   <title>{{personal.firstName}} {{personal.lastName}}</title>
   <style>
     /* Page geometry is owned by Playwright's page.pdf({ format, margin }).
-       Do not set @page { margin } here — conflicting CSS margins were the
-       source of first-page/subsequent-page margin drift. */
+       Typography tiers, spacing tokens, and keep-together rules come from the
+       print-spec style block injected by renderTemplateHTML — this template
+       only references tier classes and var(--sp-*) tokens. */
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-size: 10.5pt;
-      line-height: calc(1.35 * var(--rr-line-height-mul, 1));
-      color: var(--rr-ink);
-      background: var(--rr-bg);
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
-    }
+
     .resume-doc {
       display: flex;
       flex-direction: column;
-      gap: calc(11pt * var(--rr-section-gap-mul, 1));
+      gap: var(--sp-5);
     }
-    .resume-flow {
+
+    /* Header block */
+    .rr-header {
+      padding-bottom: var(--sp-3);
+      border-bottom: 0.75pt solid var(--rr-border);
       display: flex;
       flex-direction: column;
-      gap: calc(11pt * var(--rr-section-gap-mul, 1));
+      gap: var(--sp-2);
     }
-    /* Header: name + single contact line (reference resume layout) */
-    .header {
-      padding-bottom: 8pt;
-      border-bottom: 0.75pt solid var(--rr-border);
-    }
-    .name {
-      font-size: 22pt;
-      font-weight: 700;
-      letter-spacing: 0;
-      color: var(--rr-heading);
-      line-height: 1.15;
-    }
-    .headline {
-      font-size: 10.5pt;
-      color: var(--rr-muted);
-      font-weight: 600;
-      margin-top: 5pt;
-    }
-    .contact-line {
-      margin-top: 6pt;
-      font-size: 10pt;
-      font-weight: 400;
-      color: var(--rr-muted);
-      line-height: 1.45;
+    .rr-contact-line {
       word-wrap: break-word;
     }
-    .contact-line .csep { color: var(--rr-muted); font-weight: 400; }
-    .contact-line a { color: var(--rr-link); font-weight: 400; }
+    .rr-contact-line .csep { color: var(--rr-muted); }
+    .rr-contact-line a { color: var(--rr-link); }
 
-    .section {
-      break-inside: auto;
-      page-break-inside: auto;
-    }
-    .section-title {
-      font-size: 10.5pt;
-      font-weight: var(--rr-heading-weight, 700);
-      letter-spacing: 0.04em;
-      text-transform: uppercase;
-      color: var(--rr-heading);
-      margin: 0 0 7pt 0;
-      padding-bottom: 3pt;
-      border-bottom: 0.5pt solid var(--rr-border);
-    }
-    .summary {
-      font-size: 10pt;
-      color: var(--rr-ink);
-      line-height: 1.45;
-      text-align: left;
-    }
-
-    /* Experience / project entries — no left rail bullets */
-    .entry {
-      margin-bottom: 10pt;
-      break-inside: avoid;
-      page-break-inside: avoid;
-      padding-left: 0;
-    }
-    .entry:last-child {
-      margin-bottom: 0;
-    }
-    .entry::before { display: none; }
-    .exp-title {
-      font-size: 10.5pt;
-      font-weight: 700;
-      color: var(--rr-heading);
-      line-height: 1.25;
-    }
-    .exp-meta {
+    /* Section layout */
+    .rr-section-body {
+      margin-top: var(--sp-4);
       display: flex;
-      flex-wrap: wrap;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 6pt 12pt;
-      margin-top: 2pt;
-      font-size: 10pt;
-      color: var(--rr-muted);
-      font-weight: 400;
-    }
-    .exp-meta .exp-co { font-weight: 400; color: var(--rr-ink); }
-    .exp-meta .exp-dates { white-space: nowrap; }
-    .exp-meta .exp-role { text-align: right; flex: 1; min-width: 8em; }
-
-    ul.bullets {
-      list-style: none;
-      margin: 5pt 0 0 0;
-      padding: 0;
-    }
-    ul.bullets li {
-      position: relative;
-      padding-left: 12pt;
-      margin-bottom: 3pt;
-      font-size: 10pt;
-      color: var(--rr-ink);
-      line-height: 1.4;
-      text-align: left;
-    }
-    ul.bullets li::before {
-      content: '•';
-      position: absolute;
-      left: 0;
-      top: 0;
-      color: var(--rr-ink);
-      font-weight: 400;
+      flex-direction: column;
+      gap: var(--sp-3);
     }
 
-    /* Projects — title + org · link (reference layout) */
-    .proj-title {
-      font-size: 10.5pt;
-      font-weight: 700;
-      color: var(--rr-heading);
-      line-height: 1.25;
+    /* Entry layout */
+    .rr-entry {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-2);
     }
-    .proj-sub {
-      margin-top: 2pt;
-      font-size: 10pt;
-      color: var(--rr-muted);
-    }
-    .proj-sub a { color: var(--rr-link); }
+    .rr-entry-meta .rr-entry-dates { white-space: nowrap; }
+    .rr-entry-meta .rr-entry-role  { text-align: right; }
 
-    /* Education — degree, then school • location • date */
-    .edu-degree {
-      font-size: 10.5pt;
-      font-weight: 700;
-      color: var(--rr-heading);
-      line-height: 1.25;
-    }
-    .edu-line {
-      margin-top: 2pt;
-      font-size: 10pt;
-      color: var(--rr-muted);
-    }
-
-    /* Skills — "Backend: a, b, c." lines */
-    .skill-line {
-      font-size: 10pt;
-      line-height: 1.45;
-      color: var(--rr-ink);
-      margin-bottom: 4pt;
-      text-align: left;
-      break-inside: avoid;
-      page-break-inside: avoid;
-    }
-    .skill-line:last-child {
-      margin-bottom: 0;
-    }
-    .skill-line .lab {
-      font-weight: 700;
-      color: var(--rr-heading);
-    }
+    /* Skills */
+    .rr-skill-line + .rr-skill-line { margin-top: var(--sp-2); }
+    .rr-skill-line .rr-skill-label { font-weight: 700; color: var(--rr-heading); }
   </style>
 </head>
 <body class="rr-resume">
 
 <div class="resume-doc">
-  <header class="header">
-    <div class="name">{{personal.firstName}} {{personal.lastName}}</div>
-    {{#if personal.headline}}<div class="headline">{{personal.headline}}</div>{{/if}}
-    <div class="contact-line">
+  <header class="rr-header">
+    <div class="rr-name">{{personal.firstName}} {{personal.lastName}}</div>
+    {{#if personal.headline}}<div class="rr-headline">{{personal.headline}}</div>{{/if}}
+    <div class="rr-contact-line rr-caption">
       {{#if personal.location}}<span>{{personal.location}}</span>{{/if}}
       {{#if personal.email}}{{#if personal.location}}<span class="csep"> · </span>{{/if}}<span>{{personal.email}}</span>{{/if}}
       {{#if personal.phone}}<span class="csep"> · </span><span>{{personal.phone}}</span>{{/if}}
@@ -193,100 +68,118 @@
     </div>
   </header>
 
-  <div class="resume-flow">
   {{#each sectionOrder}}
     {{#if (eq this "summary")}}
       {{#if @root.personal.summary}}
-      <section class="section">
-        <div class="section-title">Summary</div>
-        <div class="summary" data-rr-field="personal.summary">{{{fmt @root.personal.summary}}}</div>
+      <section class="rr-section">
+        <div class="rr-section-heading">Summary</div>
+        <div class="rr-section-body">
+          <div class="rr-body" data-rr-field="personal.summary">{{{fmt @root.personal.summary}}}</div>
+        </div>
       </section>
       {{/if}}
     {{/if}}
+
     {{#if (eq this "experience")}}
       {{#if @root.experiences.length}}
-      <section class="section" data-rr-field="section.experience">
-        <div class="section-title">Experience</div>
-        {{#each @root.experiences}}
-        <div class="entry" data-rr-field="experiences.{{@index}}.block">
-          <div class="exp-title">{{title}}</div>
-          <div class="exp-meta">
-            <span class="exp-co">{{#if company}}{{company}}{{/if}}</span>
-            <span class="exp-dates">
-              {{#if startDate}}{{formatDate startDate}}{{/if}}
-              {{#if isCurrent}} – Present{{else}}{{#if endDate}} – {{formatDate endDate}}{{/if}}{{/if}}
-            </span>
-            {{#if role}}<span class="exp-role">{{role}}</span>{{/if}}
+      <section class="rr-section" data-rr-field="section.experience">
+        <div class="rr-section-heading">Experience</div>
+        <div class="rr-section-body">
+          {{#each @root.experiences}}
+          <div class="rr-entry" data-rr-field="experiences.{{@index}}.block">
+            <div class="rr-entry-header">
+              <div class="rr-entry-title">{{title}}</div>
+              <div class="rr-entry-meta">
+                {{#if company}}<span class="rr-entry-co">{{company}}</span>{{/if}}
+                <span class="rr-entry-dates">
+                  {{#if startDate}}{{formatDate startDate}}{{/if}}
+                  {{#if isCurrent}} – Present{{else}}{{#if endDate}} – {{formatDate endDate}}{{/if}}{{/if}}
+                </span>
+                {{#if role}}<span class="rr-entry-role">{{role}}</span>{{/if}}
+              </div>
+            </div>
+            {{#if bullets.length}}
+            <ul class="rr-bullets rr-body">
+              {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
+            </ul>
+            {{/if}}
           </div>
-          {{#if bullets.length}}
-          <ul class="bullets">
-            {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
-          </ul>
-          {{/if}}
+          {{/each}}
         </div>
-        {{/each}}
       </section>
       {{/if}}
     {{/if}}
+
     {{#if (eq this "projects")}}
       {{#if @root.projects.length}}
-      <section class="section" data-rr-field="section.projects">
-        <div class="section-title">Project</div>
-        {{#each @root.projects}}
-        <div class="entry">
-          <div class="proj-title">{{title}}</div>
-          <div class="proj-sub">
-            {{#if role}}{{role}}{{/if}}
-            {{#if link}}{{#if role}}<span> · </span>{{/if}}<a href="{{hrefUrl link}}">{{link}}</a>{{/if}}
+      <section class="rr-section" data-rr-field="section.projects">
+        <div class="rr-section-heading">Projects</div>
+        <div class="rr-section-body">
+          {{#each @root.projects}}
+          <div class="rr-entry">
+            <div class="rr-entry-header">
+              <div class="rr-entry-title">{{title}}</div>
+              <div class="rr-entry-meta">
+                {{#if role}}<span>{{role}}</span>{{/if}}
+                {{#if link}}{{#if role}}<span class="csep"> · </span>{{/if}}<a href="{{hrefUrl link}}">{{link}}</a>{{/if}}
+              </div>
+            </div>
+            {{#if bullets.length}}
+            <ul class="rr-bullets rr-body">
+              {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
+            </ul>
+            {{/if}}
           </div>
-          {{#if bullets.length}}
-          <ul class="bullets">
-            {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
-          </ul>
-          {{/if}}
+          {{/each}}
         </div>
-        {{/each}}
       </section>
       {{/if}}
     {{/if}}
+
     {{#if (eq this "education")}}
       {{#if @root.educations.length}}
-      <section class="section" data-rr-field="section.education">
-        <div class="section-title">Education</div>
-        {{#each @root.educations}}
-        <div class="entry">
-          <div class="edu-degree">{{degree}}{{#if major}} ({{major}}){{/if}}</div>
-          <div class="edu-line">
-            {{institution}}
-            {{#if gpa}} · {{gpa}}{{/if}}
-            {{#if endDate}} · {{formatDate endDate}}{{else}}{{#if startDate}} · {{formatDate startDate}}{{/if}}{{/if}}
-            {{#if isCurrent}} · Present{{/if}}
+      <section class="rr-section" data-rr-field="section.education">
+        <div class="rr-section-heading">Education</div>
+        <div class="rr-section-body">
+          {{#each @root.educations}}
+          <div class="rr-entry">
+            <div class="rr-entry-header">
+              <div class="rr-entry-title">{{degree}}{{#if major}} ({{major}}){{/if}}</div>
+              <div class="rr-entry-meta">
+                <span>{{institution}}</span>
+                {{#if gpa}}<span class="csep"> · </span><span>{{gpa}}</span>{{/if}}
+                {{#if endDate}}<span class="csep"> · </span><span class="rr-entry-dates">{{formatDate endDate}}</span>{{else}}{{#if startDate}}<span class="csep"> · </span><span class="rr-entry-dates">{{formatDate startDate}}</span>{{/if}}{{/if}}
+                {{#if isCurrent}}<span class="csep"> · </span><span>Present</span>{{/if}}
+              </div>
+            </div>
+            {{#if bullets.length}}
+            <ul class="rr-bullets rr-body">
+              {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
+            </ul>
+            {{/if}}
           </div>
-          {{#if bullets.length}}
-          <ul class="bullets">
-            {{#each bullets}}<li>{{{fmt this}}}</li>{{/each}}
-          </ul>
-          {{/if}}
+          {{/each}}
         </div>
-        {{/each}}
       </section>
       {{/if}}
     {{/if}}
+
     {{#if (eq this "skills")}}
       {{#if @root.skills.length}}
-      <section class="section" data-rr-field="section.skills">
-        <div class="section-title">Skills</div>
-        {{#each @root.skills}}
-        <div class="skill-line">
-          <span class="lab">{{{fmt name}}}:</span>
-          {{#each skills}}{{{fmt this}}}{{#unless @last}}, {{/unless}}{{/each}}.
+      <section class="rr-section" data-rr-field="section.skills">
+        <div class="rr-section-heading">Skills</div>
+        <div class="rr-section-body">
+          {{#each @root.skills}}
+          <div class="rr-skill-line rr-body">
+            <span class="rr-skill-label">{{{fmt name}}}:</span>
+            {{#each skills}}{{{fmt this}}}{{#unless @last}}, {{/unless}}{{/each}}.
+          </div>
+          {{/each}}
         </div>
-        {{/each}}
       </section>
       {{/if}}
     {{/if}}
   {{/each}}
-  </div>
 </div>
 
 </body>

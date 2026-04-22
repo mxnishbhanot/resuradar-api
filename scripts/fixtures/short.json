@@ -1,0 +1,40 @@
+{
+  "_id": null,
+  "personal": {
+    "firstName": "Ada",
+    "lastName": "Lovelace",
+    "email": "ada@example.com",
+    "phone": "+1 555 123 4567",
+    "headline": "Analytical Engineer",
+    "location": "London, UK",
+    "linkedin": "linkedin.com/in/ada",
+    "github": "",
+    "portfolioUrl": "",
+    "summary": "Mathematician with an interest in mechanical computation and algorithmic design."
+  },
+  "educations": [
+    {
+      "id": "e1",
+      "institution": "Self-directed Study",
+      "degree": "Mathematics",
+      "major": "Analysis",
+      "startDate": "1833-01-01",
+      "endDate": "1835-06-01",
+      "isCurrent": false,
+      "gpa": "",
+      "bullets": []
+    }
+  ],
+  "experiences": [],
+  "projects": [],
+  "skills": [
+    { "id": "s1", "name": "Mathematics", "skills": ["Analysis", "Combinatorics"] }
+  ],
+  "theme": "modern",
+  "colorScheme": "light",
+  "templateSettings": {
+    "sectionOrder": ["summary", "experience", "projects", "education", "skills"],
+    "layout": { "layoutVersion": 1, "globalScale": 1, "sectionGap": 1, "lineHeight": 1 },
+    "appearance": { "appearanceVersion": 1, "colorMode": "light", "headingWeight": 700, "underlineLinks": false, "bodyColor": null, "headingColor": null }
+  }
+}

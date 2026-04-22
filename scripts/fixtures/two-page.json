@@ -1,0 +1,114 @@
+{
+  "_id": null,
+  "personal": {
+    "firstName": "Alan",
+    "lastName": "Turing",
+    "email": "alan@example.com",
+    "phone": "+44 1223 555 100",
+    "headline": "Research Scientist · Cryptanalysis",
+    "location": "Cambridge, UK",
+    "linkedin": "linkedin.com/in/alan",
+    "github": "github.com/alan",
+    "portfolioUrl": "alan.example.com",
+    "summary": "Logician and research scientist with fifteen years of work on mechanical computation, algorithmic pattern recognition, and the theoretical foundations of programmable machines. Comfortable shipping both paper proofs and production runtimes."
+  },
+  "educations": [
+    {
+      "id": "e1",
+      "institution": "King's College, Cambridge",
+      "degree": "Ph.D. Mathematics",
+      "major": "Logic",
+      "startDate": "1936-09-01",
+      "endDate": "1938-06-01",
+      "isCurrent": false,
+      "gpa": "",
+      "bullets": [
+        "Thesis on systems of logic based on ordinals; committee of three external examiners.",
+        "Independent study on the Entscheidungsproblem and computable functions."
+      ]
+    },
+    {
+      "id": "e2",
+      "institution": "Princeton University",
+      "degree": "Visiting Scholar",
+      "major": "Mathematical Logic",
+      "startDate": "1935-09-01",
+      "endDate": "1936-06-01",
+      "isCurrent": false,
+      "gpa": "",
+      "bullets": []
+    }
+  ],
+  "experiences": [
+    {
+      "id": "x1",
+      "title": "Principal Scientist",
+      "company": "Bletchley Park",
+      "role": "Cryptanalysis Lead",
+      "startDate": "2018-01-01",
+      "endDate": "",
+      "isCurrent": true,
+      "bullets": [
+        "Designed a probabilistic search machine that reduced expected decryption time from weeks to under a day across the standard message corpus.",
+        "Led a cross-disciplinary team of 40 mathematicians, linguists, and engineers through a full rewrite of the analysis pipeline.",
+        "Authored the internal statistical framework used by four sibling teams; the framework is still the default three years later.",
+        "Ran weekly design reviews; introduced a written-first culture that cut re-work by about 30% on tracked initiatives."
+      ]
+    },
+    {
+      "id": "x2",
+      "title": "Senior Research Engineer",
+      "company": "National Physical Laboratory",
+      "role": "",
+      "startDate": "2014-03-01",
+      "endDate": "2017-12-01",
+      "isCurrent": false,
+      "bullets": [
+        "Specified the Automatic Computing Engine; the specification was adopted across three downstream projects.",
+        "Built the first working subroutine library for the in-house machine.",
+        "Mentored four junior engineers; two were promoted to senior within the tenure."
+      ]
+    },
+    {
+      "id": "x3",
+      "title": "Research Fellow",
+      "company": "University of Manchester",
+      "role": "",
+      "startDate": "2010-09-01",
+      "endDate": "2014-02-01",
+      "isCurrent": false,
+      "bullets": [
+        "Published a foundational paper on chemical pattern formation; cited across three adjacent disciplines.",
+        "Built an early chess-playing program on a stored-program machine."
+      ]
+    }
+  ],
+  "projects": [
+    {
+      "id": "p1",
+      "title": "Universal Machine Simulator",
+      "role": "Author",
+      "link": "turing.example.com/um",
+      "startDate": "2012-01-01",
+      "endDate": "2013-01-01",
+      "isCurrent": false,
+      "techStack": ["Lambda calculus", "Tape model"],
+      "bullets": [
+        "Reference implementation of a universal computing machine used in two graduate courses.",
+        "Documentation used by an independent textbook; generated its first royalty cheque."
+      ]
+    }
+  ],
+  "skills": [
+    { "id": "s1", "name": "Mathematics", "skills": ["Logic", "Probability", "Number theory"] },
+    { "id": "s2", "name": "Engineering", "skills": ["Assembly", "Electromechanical systems", "Statistical analysis"] },
+    { "id": "s3", "name": "Languages", "skills": ["English", "German", "French"] }
+  ],
+  "theme": "modern",
+  "colorScheme": "light",
+  "templateSettings": {
+    "sectionOrder": ["summary", "experience", "projects", "education", "skills"],
+    "layout": { "layoutVersion": 1, "globalScale": 1, "sectionGap": 1, "lineHeight": 1 },
+    "appearance": { "appearanceVersion": 1, "colorMode": "light", "headingWeight": 700, "underlineLinks": false, "bodyColor": null, "headingColor": null }
+  }
+}

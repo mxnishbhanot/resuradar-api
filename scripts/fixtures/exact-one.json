@@ -1,0 +1,70 @@
+{
+  "_id": null,
+  "personal": {
+    "firstName": "Grace",
+    "lastName": "Hopper",
+    "email": "grace@example.com",
+    "phone": "+1 555 222 3344",
+    "headline": "Compiler Engineer · Systems",
+    "location": "Arlington, VA",
+    "linkedin": "linkedin.com/in/grace",
+    "github": "github.com/grace",
+    "portfolioUrl": "",
+    "summary": "Compiler and runtime engineer focused on high-level language translation, numeric correctness, and programmer productivity across fleets of heterogeneous hardware."
+  },
+  "educations": [
+    {
+      "id": "e1",
+      "institution": "Yale University",
+      "degree": "Ph.D. Mathematics",
+      "major": "",
+      "startDate": "1930-09-01",
+      "endDate": "1934-06-01",
+      "isCurrent": false,
+      "gpa": "",
+      "bullets": []
+    }
+  ],
+  "experiences": [
+    {
+      "id": "x1",
+      "title": "Senior Compiler Engineer",
+      "company": "Eckert-Mauchly",
+      "role": "Tech Lead",
+      "startDate": "2020-01-01",
+      "endDate": "",
+      "isCurrent": true,
+      "bullets": [
+        "Designed a translator that turned high-level specifications into machine code, reducing program authoring time by roughly 40%.",
+        "Led a 6-engineer team building the symbolic layer and runtime library.",
+        "Authored internal design docs adopted across four sibling product lines."
+      ]
+    },
+    {
+      "id": "x2",
+      "title": "Compiler Engineer",
+      "company": "Remington Rand",
+      "role": "",
+      "startDate": "2016-06-01",
+      "endDate": "2019-12-01",
+      "isCurrent": false,
+      "bullets": [
+        "Shipped the arithmetic code generator and the subroutine linker.",
+        "Cut average compile time by 28% on representative programs.",
+        "Owned the nightly regression corpus and its triage rotation."
+      ]
+    }
+  ],
+  "projects": [],
+  "skills": [
+    { "id": "s1", "name": "Languages", "skills": ["COBOL", "FLOW-MATIC", "Assembly"] },
+    { "id": "s2", "name": "Systems", "skills": ["Compilers", "Linkers", "Runtimes", "Symbolic debuggers"] }
+  ],
+  "theme": "modern",
+  "colorScheme": "light",
+  "templateSettings": {
+    "sectionOrder": ["summary", "experience", "projects", "education", "skills"],
+    "layout": { "layoutVersion": 1, "globalScale": 1, "sectionGap": 1, "lineHeight": 1 },
+    "appearance": { "appearanceVersion": 1, "colorMode": "light", "headingWeight": 700, "underlineLinks": false, "bodyColor": null, "headingColor": null }
+  }
+}

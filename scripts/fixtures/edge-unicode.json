@@ -1,0 +1,56 @@
+{
+  "_id": null,
+  "personal": {
+    "firstName": "Émilie",
+    "lastName": "du Châtelet",
+    "email": "emilie@example.com",
+    "phone": "+33 1 55 00 00 00",
+    "headline": "Natural Philosopher · Переводчик",
+    "location": "Cirey-sur-Blaise, Champagne",
+    "linkedin": "linkedin.com/in/émilie",
+    "github": "",
+    "portfolioUrl": "",
+    "summary": "Natural philosopher and translator — работаю на стыке физики, математики и филологии. 哲学者・翻訳者・物理学者。"
+  },
+  "educations": [
+    {
+      "id": "e1",
+      "institution": "Académie des Sciences (visiteuse)",
+      "degree": "Études en Philosophie Naturelle",
+      "major": "Physique",
+      "startDate": "1735-01-01",
+      "endDate": "1740-01-01",
+      "isCurrent": false,
+      "gpa": "",
+      "bullets": []
+    }
+  ],
+  "experiences": [
+    {
+      "id": "x1",
+      "title": "Traductrice et Commentatrice",
+      "company": "Projet Principia",
+      "role": "Auteure principale",
+      "startDate": "2017-01-01",
+      "endDate": "2021-06-01",
+      "isCurrent": false,
+      "bullets": [
+        "Traduction commentée des Principia — ≈800 pages, livrée en quatre volumes (I–IV).",
+        "Notes marginales en français · latin · anglais (≥ 1200 notes croisées).",
+        "Révision par comité international : Москва, 東京, Cambridge."
+      ]
+    }
+  ],
+  "projects": [],
+  "skills": [
+    { "id": "s1", "name": "Langues", "skills": ["Français", "Latin", "English", "Русский", "日本語"] },
+    { "id": "s2", "name": "Domaines", "skills": ["Mécanique", "Optique", "Métaphysique"] }
+  ],
+  "theme": "modern",
+  "colorScheme": "light",
+  "templateSettings": {
+    "sectionOrder": ["summary", "experience", "projects", "education", "skills"],
+    "layout": { "layoutVersion": 1, "globalScale": 1, "sectionGap": 1, "lineHeight": 1 },
+    "appearance": { "appearanceVersion": 1, "colorMode": "light", "headingWeight": 700, "underlineLinks": false, "bodyColor": null, "headingColor": null }
+  }
+}

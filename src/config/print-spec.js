@@ -55,6 +55,20 @@ const DEFAULT_SECTION_ORDER = ["summary", "experience", "projects", "education",
 
 const ALLOWED_SECTIONS = new Set(DEFAULT_SECTION_ORDER);
 
+/** @param {unknown} hidden */
+export function normalizeHiddenSections(hidden) {
+  if (!Array.isArray(hidden)) return [];
+  const out = [];
+  const seen = new Set();
+  for (const k of hidden) {
+    if (ALLOWED_SECTIONS.has(k) && !seen.has(k)) {
+      seen.add(k);
+      out.push(k);
+    }
+  }
+  return out;
+}
+
 /** @param {string[]} order @param {string} [_templateName] reserved for future per-layout defaults */
 export function normalizeSectionOrder(order, _templateName) {
   const base = [...DEFAULT_SECTION_ORDER];
@@ -127,14 +141,51 @@ export function normalizeAppearance(raw) {
 }
 
 /**
+ * Template registry. Templates reuse the shared hbs file; each provides its
+ * own font stack and (optionally) a tiny accent CSS block that can adjust
+ * heading treatment without violating the layout token system.
+ */
+export const TEMPLATES = Object.freeze({
+  modern: {
+    id: "modern",
+    name: "Modern",
+    googleFont:
+      "https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400&display=swap",
+    fontStack:
+      "'Carlito', Calibri, 'Segoe UI', Arial, Helvetica, sans-serif",
+    accentCss: "",
+  },
+  serif: {
+    id: "serif",
+    name: "Serif",
+    googleFont:
+      "https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,wght@0,400;0,600;0,700;1,400&display=swap",
+    fontStack:
+      "'Source Serif 4', Georgia, 'Times New Roman', serif",
+    // Slightly looser heading letter-spacing reads better in serif; still a hierarchy rule, not a free-form override.
+    accentCss: `.rr-section-heading { letter-spacing: 0.06em; }`,
+  },
+});
+
+/** @param {unknown} id */
+export function resolveTemplate(id) {
+  if (typeof id === "string" && Object.prototype.hasOwnProperty.call(TEMPLATES, id)) {
+    return TEMPLATES[id];
+  }
+  return TEMPLATES.modern;
+}
+
+/**
  * Injected after <head> so it overrides template body padding / max-width.
  * Uses zoom for global scale (Chromium / Playwright PDF).
  * @param {object} layout normalized layout
  * @param {object} appearance normalized appearance
+ * @param {string} [templateId] registry id; defaults to 'modern'
  */
-export function buildPrintSpecStyleBlock(layout, appearance) {
+export function buildPrintSpecStyleBlock(layout, appearance, templateId) {
   const L = normalizeLayout(layout);
   const A = normalizeAppearance(appearance);
+  const TPL = resolveTemplate(templateId);
   const linkDeco = A.underlineLinks ? "underline" : "none";
   const T = A.colorMode === "dark" ? STANDARD_RESUME_TOKENS.dark : STANDARD_RESUME_TOKENS.light;
   const bodyInk = A.bodyColor || T.ink;
@@ -147,7 +198,7 @@ export function buildPrintSpecStyleBlock(layout, appearance) {
   const codeBg = A.colorMode === "dark" ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)";
 
   return `<style id="rr-print-spec" data-rr-injected="1">
-@import url('https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400&display=swap');
+@import url('${TPL.googleFont}');
 :root {
   --rr-content-width-mm: ${CONTENT_WIDTH_MM};
   --rr-content-height-mm: ${CONTENT_HEIGHT_MM};
@@ -155,6 +206,7 @@ export function buildPrintSpecStyleBlock(layout, appearance) {
   --rr-pdf-margin-x-mm: ${PDF_MARGIN_X_MM};
   --rr-pdf-margin-y-mm: ${PDF_MARGIN_Y_MM};
   --rr-resume-scale: ${L.globalScale};
+  /* Legacy knob retained for backward compat; only applied to --sp-5 and --sp-6 below. */
   --rr-section-gap-mul: ${L.sectionGap};
   --rr-line-height-mul: ${L.lineHeight};
   --rr-ink: ${bodyInk};
@@ -167,9 +219,19 @@ export function buildPrintSpecStyleBlock(layout, appearance) {
   --rr-code-bg: ${codeBg};
   --rr-heading-weight: ${A.headingWeight};
   --rr-link-decoration: ${linkDeco};
+
+  /* ── Spacing scale (mm). Every vertical/horizontal gap comes from here. ── */
+  --sp-0: 0;
+  --sp-1: 1mm;
+  --sp-2: 2mm;
+  --sp-3: 3mm;
+  --sp-4: 4mm;
+  /* Density preset multiplies only these two scales (section gap + post-header gap). */
+  --sp-5: calc(5mm * var(--rr-section-gap-mul, 1));
+  --sp-6: calc(7mm * var(--rr-section-gap-mul, 1));
 }
 body.rr-resume {
-  font-family: 'Carlito', Calibri, 'Segoe UI', Arial, Helvetica, sans-serif !important;
+  font-family: ${TPL.fontStack} !important;
   padding: 0 !important;
   max-width: ${CONTENT_WIDTH_MM}mm !important;
   width: 100% !important;
@@ -187,6 +249,62 @@ body.rr-resume a {
   text-underline-offset: 2px;
   font-weight: 500;
 }
+
+/* ── Typography tiers. Template elements opt in via these classes only. ── */
+.rr-name        { font-size: 22pt;   line-height: 1.15; font-weight: 700; color: var(--rr-heading); letter-spacing: 0; }
+.rr-headline    { font-size: 11pt;   line-height: 1.3;  font-weight: 400; color: var(--rr-muted); }
+.rr-section-heading {
+  font-size: 11pt; line-height: 1.2; font-weight: var(--rr-heading-weight, 700);
+  color: var(--rr-heading);
+  letter-spacing: 0.04em; text-transform: uppercase;
+  padding-bottom: var(--sp-1);
+  border-bottom: 0.5pt solid var(--rr-border);
+}
+.rr-entry-title { font-size: 10.5pt; line-height: 1.25; font-weight: 700; color: var(--rr-heading); }
+.rr-entry-meta  { font-size: 9.5pt;  line-height: 1.25; font-weight: 400; color: var(--rr-muted); }
+.rr-body        { font-size: 10pt;   line-height: calc(1.35 * var(--rr-line-height-mul, 1)); font-weight: 400; color: var(--rr-ink); }
+.rr-caption     { font-size: 9pt;    line-height: 1.3;  font-weight: 400; color: var(--rr-muted); }
+
+/* ── Keep-together rules (orphan prevention). ── */
+.rr-section { break-inside: auto; page-break-inside: auto; }
+.rr-section > .rr-section-heading,
+.rr-entry   > .rr-entry-header {
+  break-after: avoid-page;
+  page-break-after: avoid;
+}
+
+/* ── Entry header: title + meta on one row, meta wraps below if it doesn't fit. ── */
+.rr-entry-header {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: var(--sp-1) var(--sp-3);
+}
+
+/* ── Bullet lists. ── */
+.rr-bullets {
+  list-style: none;
+  margin: 0;
+  padding-inline-start: var(--sp-4);
+}
+.rr-bullets > li {
+  position: relative;
+  margin: 0;
+  padding-left: 0;
+}
+.rr-bullets > li + li { margin-top: var(--sp-2); }
+.rr-bullets > li::before {
+  content: '•';
+  position: absolute;
+  left: calc(-1 * var(--sp-4));
+  width: var(--sp-4);
+  text-align: left;
+  color: var(--rr-ink);
+}
+
+/* ── Per-template accents (font stack comes from font-family; this is visual-only polish). ── */
+${TPL.accentCss}
 </style>`;
 }
 
