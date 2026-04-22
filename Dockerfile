@@ -1,7 +1,7 @@
 # Official image already includes Chromium + OS deps for Playwright.
 # Keep the tag in sync with the resolved `playwright` version in package-lock.json
 # (https://playwright.dev/docs/docker#image-tags).
-FROM mcr.microsoft.com/playwright:v1.57.0-noble
+FROM mcr.microsoft.com/playwright:v1.59.1-noble
 
 WORKDIR /app
 
