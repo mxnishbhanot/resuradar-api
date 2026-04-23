@@ -10,8 +10,7 @@ import { normalizeParsedResume } from "../services/resumeNormalizer.js";
 import { ensureEnum, sanitizeObjectId, parseOptionalObjectId } from "../utils/validation.js";
 import { logger } from "../utils/logger.js";
 import { HttpError } from "../utils/httpError.js";
-
-const allowedTemplates = ["modern", "corporate", "faang", "luxury", "executive"];
+import { ALLOWED_RESUME_TEMPLATE_IDS } from "../config/print-spec.js";
 const removeTempFile = async (filePath) => {
   if (!filePath) return;
   try {
@@ -365,14 +364,14 @@ export const uploadCustomResume = async (req, res) => {
 /** POST body: { resume, template } — render HTML from in-memory resume (designer / auto-adjust). */
 export const renderPreviewFromBodyController = async (req, res) => {
   try {
-    const template = ensureEnum(req.body.template, "template", allowedTemplates);
+    const template = ensureEnum(req.body.template, "template", ALLOWED_RESUME_TEMPLATE_IDS);
     const resume = req.body.resume;
     if (!resume || typeof resume !== "object") {
       return res.status(400).json({ message: "resume object is required" });
     }
 
     const user = await User.findById(req.user.userId);
-    if (!userHasActivePremium(user) && !isFreeBuilderTemplate("modern")) {
+    if (!userHasActivePremium(user) && !isFreeBuilderTemplate(template)) {
       return res.status(403).json({
         success: false,
         code: "TEMPLATE_PREMIUM_ONLY",
@@ -386,6 +385,7 @@ export const renderPreviewFromBodyController = async (req, res) => {
     res.set("X-Content-Type-Options", "nosniff");
     return res.send(html);
   } catch (err) {
+    if (err instanceof HttpError) throw err;
     logger.error("Render preview body error", { message: err.message, requestId: req.requestId });
     return res.status(500).json({ message: "Failed to render preview" });
   }
@@ -395,10 +395,10 @@ export const renderPreviewFromBodyController = async (req, res) => {
 export const previewHtmlByQueryController = async (req, res) => {
   try {
     const resumeId = sanitizeObjectId(req.params.resumeId, "resumeId");
-    const template = ensureEnum(req.query.template, "template", allowedTemplates);
+    const template = ensureEnum(req.query.template, "template", ALLOWED_RESUME_TEMPLATE_IDS);
 
     const user = await User.findById(req.user.userId);
-    if (!userHasActivePremium(user) && !isFreeBuilderTemplate("modern")) {
+    if (!userHasActivePremium(user) && !isFreeBuilderTemplate(template)) {
       return res.status(403).json({
         success: false,
         code: "TEMPLATE_PREMIUM_ONLY",
@@ -423,6 +423,7 @@ export const previewHtmlByQueryController = async (req, res) => {
     res.set("X-Content-Type-Options", "nosniff");
     return res.send(html);
   } catch (err) {
+    if (err instanceof HttpError) throw err;
     logger.error("Preview HTML error", { message: err.message, requestId: req.requestId });
     return res.status(500).json({ message: "Failed to generate preview HTML" });
   }
@@ -430,11 +431,11 @@ export const previewHtmlByQueryController = async (req, res) => {
 
 export const previewResumeController = async (req, res) => {
   try {
-    const template = ensureEnum(req.params.template, "template", allowedTemplates);
+    const template = ensureEnum(req.params.template, "template", ALLOWED_RESUME_TEMPLATE_IDS);
     const resumeId = sanitizeObjectId(req.params.resumeId, "resumeId");
 
     const user = await User.findById(req.user.userId);
-    if (!userHasActivePremium(user) && !isFreeBuilderTemplate("modern")) {
+    if (!userHasActivePremium(user) && !isFreeBuilderTemplate(template)) {
       return res.status(403).json({
         success: false,
         code: "TEMPLATE_PREMIUM_ONLY",
@@ -458,6 +459,7 @@ export const previewResumeController = async (req, res) => {
     res.set("Content-Type", "text/html");
     return res.send(html);
   } catch (err) {
+    if (err instanceof HttpError) throw err;
     logger.error("Preview error", { message: err.message, requestId: req.requestId });
     return res.status(500).json({ message: "Failed to generate preview" });
   }

@@ -167,6 +167,20 @@ export const TEMPLATES = Object.freeze({
   },
 });
 
+/** Legacy slugs still accepted by the API; styling falls back via resolveTemplate until given their own registry entry. */
+const LEGACY_RESUME_TEMPLATE_ALIASES = Object.freeze([
+  "corporate",
+  "faang",
+  "luxury",
+  "executive",
+]);
+
+/** Single allowlist for export, preview, and render-preview (keeps PDF and HTML in sync with TEMPLATES). */
+export const ALLOWED_RESUME_TEMPLATE_IDS = Object.freeze([
+  ...Object.keys(TEMPLATES),
+  ...LEGACY_RESUME_TEMPLATE_ALIASES,
+]);
+
 /** @param {unknown} id */
 export function resolveTemplate(id) {
   if (typeof id === "string" && Object.prototype.hasOwnProperty.call(TEMPLATES, id)) {

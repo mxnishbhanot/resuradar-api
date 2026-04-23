@@ -1,18 +1,18 @@
 import CustomResume from "../models/CustomResume.js";
 import User from "../models/User.js";
 import { exportResumeService } from "../services/export.service.js";
+import { ALLOWED_RESUME_TEMPLATE_IDS } from "../config/print-spec.js";
 import { ensureEnum, sanitizeObjectId } from "../utils/validation.js";
+import { HttpError } from "../utils/httpError.js";
 import { userHasActivePremium, isFreeBuilderTemplate } from "../services/subscriptionAccess.js";
-
-const allowedTemplates = ["modern", "corporate", "faang", "luxury", "executive"];
 
 export const exportResumeController = async (req, res) => {
   try {
     const resumeId = sanitizeObjectId(req.query.resumeId, "resumeId");
-    const template = ensureEnum(req.query.template, "template", allowedTemplates);
+    const template = ensureEnum(req.query.template, "template", ALLOWED_RESUME_TEMPLATE_IDS);
 
     const user = await User.findById(req.user.userId);
-    if (!userHasActivePremium(user) && !isFreeBuilderTemplate("modern")) {
+    if (!userHasActivePremium(user) && !isFreeBuilderTemplate(template)) {
       return res.status(403).json({
         success: false,
         code: "TEMPLATE_PREMIUM_ONLY",
@@ -35,6 +35,7 @@ export const exportResumeController = async (req, res) => {
 
     res.send(pdfBuffer);
   } catch (err) {
+    if (err instanceof HttpError) throw err;
     console.error("Export Error:", err);
     res.status(500).json({ message: "Failed to export PDF", error: err.message });
   }
