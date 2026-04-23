@@ -6,6 +6,7 @@ import { userHasActivePremium, isFreeBuilderTemplate } from "../services/subscri
 import { PDFParse } from "pdf-parse";
 import mammoth from "mammoth";
 import { renderTemplateHTML } from "../services/template-engine.js";
+import { computePreviewPageBreakYs } from "../services/page-breaks.service.js";
 import { normalizeParsedResume } from "../services/resumeNormalizer.js";
 import { ensureEnum, sanitizeObjectId, parseOptionalObjectId } from "../utils/validation.js";
 import { logger } from "../utils/logger.js";
@@ -388,6 +389,35 @@ export const renderPreviewFromBodyController = async (req, res) => {
     if (err instanceof HttpError) throw err;
     logger.error("Render preview body error", { message: err.message, requestId: req.requestId });
     return res.status(500).json({ message: "Failed to render preview" });
+  }
+};
+
+/** POST body: { resume, template } — PDF-aligned page break Y positions for designer overlay. */
+export const previewPageBreaksFromBodyController = async (req, res) => {
+  try {
+    const template = ensureEnum(req.body.template, "template", ALLOWED_RESUME_TEMPLATE_IDS);
+    const resume = req.body.resume;
+    if (!resume || typeof resume !== "object") {
+      return res.status(400).json({ message: "resume object is required" });
+    }
+
+    const user = await User.findById(req.user.userId);
+    if (!userHasActivePremium(user) && !isFreeBuilderTemplate(template)) {
+      return res.status(403).json({
+        success: false,
+        code: "TEMPLATE_PREMIUM_ONLY",
+        message:
+          "PDF export is not available on your current plan. Upgrade to export your resume.",
+      });
+    }
+
+    const html = renderTemplateHTML(resume, template);
+    const { breakYsPx, pageCount, source } = await computePreviewPageBreakYs(html);
+    return res.json({ breakYsPx, pageCount, source });
+  } catch (err) {
+    if (err instanceof HttpError) throw err;
+    logger.error("Preview page breaks error", { message: err.message, requestId: req.requestId });
+    return res.status(500).json({ message: "Failed to compute page breaks" });
   }
 };
 

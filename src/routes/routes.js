@@ -24,6 +24,7 @@ import {
   previewHtmlByQueryController,
   previewResumeController,
   renderPreviewFromBodyController,
+  previewPageBreaksFromBodyController,
   saveCustomResume,
   uploadCustomResume,
 } from "../controllers/customResumeController.js";
@@ -80,6 +81,11 @@ router.post(
   "/custom-resume/render-preview",
   verifyToken,
   asyncHandler(renderPreviewFromBodyController)
+);
+router.post(
+  "/custom-resume/preview-page-breaks",
+  verifyToken,
+  asyncHandler(previewPageBreaksFromBodyController)
 );
 router.get("/custom-resume/draft", verifyToken, asyncHandler(getCustomResumeDraft));
 router.put("/custom-resume/draft/autosave", verifyToken, asyncHandler(autoSaveCustomResumeDraft));
